@@ -76,3 +76,9 @@ public interface IDHStartup
     /// </summary>
     int ConfigureOrder { get; }
 }
+
+public class DHConast
+{
+    /// <summary>IDHStartup集合</summary>
+    public static IEnumerable<IDHStartup> DHStartups { get; set; }
+}
