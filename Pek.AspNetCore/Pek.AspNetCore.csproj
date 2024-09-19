@@ -54,8 +54,4 @@
     <Content Include="..\Doc\DH.png" Link="DH.png" PackagePath="\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="Extensions\DHExtensions.Security.cs" />
-  </ItemGroup>
-
 </Project>
