@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace Pek.Extensions;
+namespace Pek;
 
 /// <summary>
 /// 系统扩展 - 安全
