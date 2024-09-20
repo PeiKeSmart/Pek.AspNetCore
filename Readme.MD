@@ -1,3 +1,3 @@
-﻿# DH.NFuji - 富士PLC
+﻿# Pek.AspNetCore - AspNetCore基类
 
-富士PLC协议实现  
+AspNetCore基类
