@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
 using NewLife;
+using Pek.Helpers;
 
-namespace Pek.Helpers;
+namespace Pek.Models;
 
 /// <summary>
 /// 专用返回
@@ -74,11 +75,9 @@ public class DGResult : JsonResult
             throw new ArgumentNullException(nameof(context));
 
         if (Id.IsNullOrWhiteSpace())
-        {
             Id = Guid.NewGuid().ToString();
-        }
 
-        this.Value = new
+        Value = new
         {
             Code = Code.Value(),
             Message,
