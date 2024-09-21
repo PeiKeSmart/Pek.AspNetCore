@@ -22,7 +22,7 @@ public static partial class DHWeb
         try
         {
             Environment = Pek.Webs.HttpContext.Current.RequestServices.GetService<IWebHostEnvironment>();
-            //ServicePointManager.DefaultConnectionLimit = 200;
+            ServicePointManager.DefaultConnectionLimit = 100000;  // 用来限制客户端请求的并发最大连接数
         }
         catch
         {
