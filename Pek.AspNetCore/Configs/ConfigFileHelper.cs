@@ -1,6 +1,4 @@
-﻿using System.Xml;
-
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 
 using NewLife.Serialization;
 
