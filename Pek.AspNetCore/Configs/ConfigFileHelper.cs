@@ -109,6 +109,11 @@ public static class ConfigFileHelper
                 config.AddJsonFile(setting, optional: false, reloadOnChange: true);
             });
         }
+        else
+        {
+            settingsFolder = "Settings".GetFullPath();
+            settingsFolder.EnsureDirectory(false);
+        }
     }
 
 #if NET5_0_OR_GREATER
