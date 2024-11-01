@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>Pek</RootNamespace>
     <AssemblyTitle>AspNetCore基类</AssemblyTitle>
@@ -47,7 +47,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pek.Common" Version="3.91.2024.1101-beta0115" />
+    <PackageReference Include="Pek.Common" Version="3.91.2024.1101-beta0137" />
   </ItemGroup>
 
   <ItemGroup>
