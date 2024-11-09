@@ -15,7 +15,6 @@ namespace Pek;
 /// </summary>
 public partial class CommonHelper
 {
-
     #region 字段
 
     //we use EmailValidator from FluentValidation. So let's keep them sync - https://github.com/JeremySkinner/FluentValidation/blob/master/src/FluentValidation/Validators/EmailValidator.cs
@@ -33,6 +32,7 @@ public partial class CommonHelper
     }
 
     #endregion
+
     #region 属性
 
     /// <summary>
