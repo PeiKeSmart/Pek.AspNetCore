@@ -45,5 +45,7 @@ public static class ServiceCollectionExtensions
                 }
             }
         }
+
+        ObjectContainer.Provider = services.BuildServiceProvider();
     }
 }
