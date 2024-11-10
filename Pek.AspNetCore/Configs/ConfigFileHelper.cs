@@ -87,6 +87,13 @@ public static class ConfigFileHelper
         // 查找 Settings目录
         if (!Directory.Exists(settingsFolder))
         {
+            dir = Path.GetFullPath(AppContext.BaseDirectory + "/Data");
+        }
+
+        settingsFolder = Path.Combine(dir, "Settings");
+
+        if (!Directory.Exists(settingsFolder))
+        {
             dir = Path.GetFullPath(AppContext.BaseDirectory + "/..");
         }
 
@@ -106,11 +113,6 @@ public static class ConfigFileHelper
             {
                 config.AddJsonFile(setting, optional: false, reloadOnChange: true);
             });
-        }
-        else
-        {
-            settingsFolder = "Settings".GetFullPath();
-            settingsFolder.EnsureDirectory(false);
         }
     }
 
@@ -152,11 +154,6 @@ public static class ConfigFileHelper
             {
                 config.AddJsonFile(setting, optional: false, reloadOnChange: true);
             });
-        }
-        else
-        {
-            settingsFolder = "Settings".GetFullPath();
-            settingsFolder.EnsureDirectory(false);
         }
     }
 #endif
