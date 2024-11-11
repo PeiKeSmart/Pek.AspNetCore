@@ -17,6 +17,7 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
     <NoWarn>1701;1702;1591;NU5104;NU1505;NETSDK1138;CS7035</NoWarn>
     <!--禁止生成launchSettings.json-->
     <NoDefaultLaunchSettingsFile>True</NoDefaultLaunchSettingsFile>
