@@ -22,25 +22,22 @@ public partial class WebHelperEx
         if (!IsRequestAvailable(httpContext))
             return false;
 
-        var path = httpContext == null ? _httpContextAccessor.HttpContext?.Request.Path : httpContext.Request.Path;
-
+        var path = httpContext?.Request.Path ?? _httpContextAccessor.HttpContext?.Request.Path;
         if (path == null)
         {
             return false;
         }
 
         var extension = GetExtension(path);
-        if (extension == null)
+        if (extension.IsNullOrEmpty())
         {
             return false;
         }
 
-        var hashSet = new HashSet<String>
-        {
-            ".map",
-            ".css"
-        };
-        if (hashSet.Contains(extension))
+        // 直接初始化 HashSet，使用 StringComparer.OrdinalIgnoreCase 以支持不区分大小写的比较
+        var staticExtensions = new HashSet<String>([".map", ".css"], StringComparer.OrdinalIgnoreCase);
+
+        if (staticExtensions.Contains(extension))
         {
             return true;
         }
@@ -49,9 +46,9 @@ public partial class WebHelperEx
         // 参考: https://github.com/aspnet/StaticFiles/blob/dev/src/Microsoft.AspNetCore.StaticFiles/FileExtensionContentTypeProvider.cs
         // 如果可以返回内容类型，则为静态文件
         var contentTypeProvider = new FileExtensionContentTypeProvider();
-
-        return contentTypeProvider.TryGetContentType(path, out var _);
+        return contentTypeProvider.TryGetContentType(path, out _);
     }
+
 
     /// <summary>
     /// 检查当前HTTP请求是否可用

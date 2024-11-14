@@ -25,21 +25,32 @@ public class CalculateExecutionTimeMiddleware
     /// <returns></returns>
     public async Task Invoke(HttpContext ctx)
     {
-        if (!ctx.WebSockets.IsWebSocketRequest)
+        if (ctx.WebSockets.IsWebSocketRequest)
         {
-            if (WebHelperEx.IsStaticResource(ctx))
-            {
-                await _next.Invoke(ctx);
-                return;
-            }
-
-            stopwatch = new Stopwatch();
-            stopwatch.Start(); //在下一个中间价处理前，启动计时器
-
             await _next.Invoke(ctx);
+            return;
+        }
 
-            stopwatch.Stop(); //所有的中间件处理完后，停止秒表。
-            XTrace.WriteLine($"请求{ctx.Request.Path}耗时{stopwatch.ElapsedMilliseconds}ms");
+        // 检查是否为静态资源
+        if (WebHelperEx.IsStaticResource(ctx))
+        {
+            await _next.Invoke(ctx);
+            return;
+        }
+
+        var stopwatch = Stopwatch.StartNew(); // 启动计时器
+
+        try
+        {
+            await _next.Invoke(ctx); // 调用下一个中间件
+        }
+        finally
+        {
+            stopwatch.Stop(); // 确保在所有情况下都停止计时器
+            var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+
+            // 记录请求耗时
+            XTrace.WriteLine($"请求{ctx.Request.Path}耗时{elapsedMilliseconds}ms");
         }
     }
 }
