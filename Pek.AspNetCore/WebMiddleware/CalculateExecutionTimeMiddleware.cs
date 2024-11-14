@@ -27,6 +27,12 @@ public class CalculateExecutionTimeMiddleware
     {
         if (!ctx.WebSockets.IsWebSocketRequest)
         {
+            if (WebHelperEx.IsStaticResource(ctx))
+            {
+                await _next.Invoke(ctx);
+                return;
+            }
+
             stopwatch = new Stopwatch();
             stopwatch.Start(); //在下一个中间价处理前，启动计时器
 
