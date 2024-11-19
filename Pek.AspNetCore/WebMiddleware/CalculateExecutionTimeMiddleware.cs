@@ -38,6 +38,13 @@ public class CalculateExecutionTimeMiddleware
             return;
         }
 
+        // 检查请求链接是否包含指定内容
+        if (ContainsFilterContent(ctx.Request.Path))
+        {
+            await _next.Invoke(ctx);
+            return;
+        }
+
         var stopwatch = Stopwatch.StartNew(); // 启动计时器
 
         try
@@ -52,6 +59,17 @@ public class CalculateExecutionTimeMiddleware
             // 记录请求耗时
             XTrace.WriteLine($"请求{ctx.Request.Path}耗时{elapsedMilliseconds}ms");
         }
+    }
+
+    /// <summary>
+    /// 检查请求链接是否包含指定内容
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    private Boolean ContainsFilterContent(String path)
+    {
+        var filterContents = new[] { "/greet.Greeter" }; // 需要过滤的内容
+        return filterContents.Any(content => path.Contains(content, StringComparison.OrdinalIgnoreCase));
     }
 }
 
