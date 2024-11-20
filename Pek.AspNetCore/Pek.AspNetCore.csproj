@@ -48,7 +48,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pek.Common" Version="4.0.2024.1119-beta0829" />
+    <PackageReference Include="Pek.Common" Version="4.0.2024.1120-beta1244" />
   </ItemGroup>
 
   <ItemGroup>
