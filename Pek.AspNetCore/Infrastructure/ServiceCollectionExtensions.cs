@@ -11,16 +11,16 @@ public static class ServiceCollectionExtensions
     /// <returns></returns>
     public static void AddAllSingletons(this IServiceCollection services)
     {
-        foreach (var kvp in BaseSingleton.AllSingletons)
-        {
-            var serviceType = kvp.Key;
-            var implementationInstance = kvp.Value;
+        //foreach (var kvp in BaseSingleton.AllSingletons)
+        //{
+        //    var serviceType = kvp.Key;
+        //    var implementationInstance = kvp.Value;
 
-            if (implementationInstance != null)
-            {
-                services.AddSingleton(serviceType, implementationInstance);
-            }
-        }
+        //    if (implementationInstance != null)
+        //    {
+        //        services.AddSingleton(serviceType, implementationInstance);
+        //    }
+        //}
 
         foreach (var item in ObjectContainer.Current.Services)
         {
