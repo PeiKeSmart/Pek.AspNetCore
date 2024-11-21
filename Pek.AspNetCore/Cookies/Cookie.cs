@@ -7,10 +7,10 @@ namespace Pek.Cookies;
 
 public class Cookie : ICookie
 {
-    private readonly HttpContext _httpContext;
-    private const float DefaultExpireDurationMinutes = 43200; // 1 month
-    private const bool DefaultHttpOnly = true;
-    private const bool ExpireWithBrowser = false;
+    private readonly HttpContext? _httpContext;
+    private const Single DefaultExpireDurationMinutes = 43200; // 1 month
+    private const Boolean DefaultHttpOnly = true;
+    private const Boolean ExpireWithBrowser = false;
     private const String DefaultPath = "/";
 
     public Cookie(IHttpContextAccessor httpContextAccessor)
@@ -18,16 +18,13 @@ public class Cookie : ICookie
         _httpContext = httpContextAccessor.HttpContext;
     }
 
-    public T GetValue<T>(string name)
-    {
-        return GetValue<T>(name, false);
-    }
+    public T? GetValue<T>(String name) => GetValue<T>(name, false);
 
-    public T GetValue<T>(string name, bool expireOnceRead)
+    public T? GetValue<T>(String name, Boolean expireOnceRead)
     {
-        T value = default;
+        T? value = default;
 
-        if (_httpContext.Request.Cookies.TryGetValue(name, out var valuStr))
+        if (_httpContext?.Request.Cookies.TryGetValue(name, out var valuStr) == true)
         {
             if (!valuStr.IsNullOrWhiteSpace())
             {
@@ -35,7 +32,7 @@ public class Cookie : ICookie
 
                 try
                 {
-                    value = (T)converter.ConvertFromString(valuStr);
+                    value = (T?)converter.ConvertFromString(valuStr);
                 }
                 catch (NotSupportedException)
                 {
@@ -45,9 +42,9 @@ public class Cookie : ICookie
                     }
                     catch (NotSupportedException)
                     {
-                        if (converter.CanConvertFrom(typeof(string)))
+                        if (converter.CanConvertFrom(typeof(String)))
                         {
-                            value = (T)converter.ConvertFrom(valuStr);
+                            value = (T?)converter.ConvertFrom(valuStr);
                         }
                     }
                 }
@@ -62,41 +59,41 @@ public class Cookie : ICookie
         return value;
     }
 
-    public void SetValue<T>(string name, T value)
+    public void SetValue<T>(String name, T value)
     {
         SetValue(name, value, DefaultExpireDurationMinutes, DefaultHttpOnly, ExpireWithBrowser, DefaultPath);
     }
 
-    public void SetValue<T>(string name, T value, String path)
+    public void SetValue<T>(String name, T value, String path)
     {
         SetValue(name, value, DefaultExpireDurationMinutes, DefaultHttpOnly, ExpireWithBrowser, path);
     }
 
-    public void SetValue<T>(string name, T value, float expireDurationInMinutes)
+    public void SetValue<T>(String name, T value, Single expireDurationInMinutes)
     {
         SetValue(name, value, expireDurationInMinutes, DefaultHttpOnly, ExpireWithBrowser, DefaultPath);
     }
 
-    public void SetValue<T>(string name, T value, float expireDurationInMinutes, String path)
+    public void SetValue<T>(String name, T value, Single expireDurationInMinutes, String path)
     {
         SetValue(name, value, expireDurationInMinutes, DefaultHttpOnly, ExpireWithBrowser, path);
     }
 
-    public void SetValue<T>(string name, T value, bool httpOnly, bool expireWithBrowser)
+    public void SetValue<T>(String name, T value, Boolean httpOnly, Boolean expireWithBrowser)
     {
         SetValue(name, value, DefaultExpireDurationMinutes, httpOnly, expireWithBrowser, DefaultPath);
     }
 
-    public void SetValue<T>(string name, T value, bool httpOnly, bool expireWithBrowser, String path)
+    public void SetValue<T>(String name, T value, Boolean httpOnly, Boolean expireWithBrowser, String path)
     {
         SetValue(name, value, DefaultExpireDurationMinutes, httpOnly, expireWithBrowser, path);
     }
 
-    public void SetValue<T>(string name, T value, float expireDurationInMinutes, bool httpOnly, bool expireWithBrowser, String path)
+    public void SetValue<T>(String name, T value, Single expireDurationInMinutes, Boolean httpOnly, Boolean expireWithBrowser, String path)
     {
         var converter = TypeDescriptor.GetConverter(typeof(T));
 
-        var cookieValue = string.Empty;
+        var cookieValue = String.Empty;
 
         try
         {
@@ -104,9 +101,9 @@ public class Cookie : ICookie
         }
         catch (NotSupportedException)
         {
-            if (converter.CanConvertTo(typeof(string)))
+            if (converter.CanConvertTo(typeof(String)))
             {
-                cookieValue = (string)converter.ConvertTo(value, typeof(string));
+                cookieValue = (String?)converter.ConvertTo(value, typeof(String));
             }
         }
 
@@ -116,11 +113,11 @@ public class Cookie : ICookie
             if (expireWithBrowser)
             {
 
-                _httpContext.Response.Cookies.Append(name, cookieValue);
+                _httpContext?.Response.Cookies.Append(name, cookieValue);
             }
             else
             {
-                _httpContext.Response.Cookies.Append(name, cookieValue, new CookieOptions
+                _httpContext?.Response.Cookies.Append(name, cookieValue, new CookieOptions
                 {
                     Expires = DateTime.Now.AddMinutes(expireDurationInMinutes),
                     HttpOnly = httpOnly,
@@ -131,8 +128,8 @@ public class Cookie : ICookie
         }
     }
 
-    public void Delete(string name)
+    public void Delete(String name)
     {
-        _httpContext.Response.Cookies.Append(name, "", new CookieOptions { Expires = DateTime.Now.AddDays(-1d) });
+        _httpContext?.Response.Cookies.Append(name, "", new CookieOptions { Expires = DateTime.Now.AddDays(-1d) });
     }
 }

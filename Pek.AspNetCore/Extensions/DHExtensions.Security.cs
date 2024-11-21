@@ -14,11 +14,11 @@ public static partial class Extensions
     /// </summary>
     /// <param name="identity">用户标识</param>
     /// <param name="type">声明类型</param>
-    public static string GetValue(this ClaimsIdentity identity, string type)
+    public static String GetValue(this ClaimsIdentity identity, String type)
     {
         var claim = identity.FindFirst(type);
         if (claim == null)
-            return string.Empty;
+            return String.Empty;
         return claim.Value;
     }
 
@@ -30,7 +30,7 @@ public static partial class Extensions
     {
         if (context == null)
             return UnauthenticatedIdentity.Instance;
-        if (!(context.User is ClaimsPrincipal principal))
+        if (context.User is not ClaimsPrincipal principal)
             return UnauthenticatedIdentity.Instance;
         if (principal.Identity is ClaimsIdentity identity)
             return identity;

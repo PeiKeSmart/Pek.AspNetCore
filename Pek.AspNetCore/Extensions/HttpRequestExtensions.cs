@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 using NewLife;
 
-namespace Pek.Extensions;
+namespace Pek;
 
 /// <summary>
 /// Http请求(<see cref="HttpRequest"/>) 扩展

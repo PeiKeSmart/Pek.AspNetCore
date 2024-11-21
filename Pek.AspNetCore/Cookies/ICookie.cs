@@ -2,13 +2,13 @@
 
 public interface ICookie
 {
-    T GetValue<T>(string name);
+    T? GetValue<T>(String name);
 
-    T GetValue<T>(string name, bool expireOnceRead);
+    T? GetValue<T>(String name, Boolean expireOnceRead);
 
-    void SetValue<T>(string name, T value);
+    void SetValue<T>(String name, T value);
 
-    void SetValue<T>(string name, T value, string path);
+    void SetValue<T>(String name, T value, String path);
 
     /// <summary>
     /// 设置Cookie项
@@ -17,15 +17,15 @@ public interface ICookie
     /// <param name="name">键</param>
     /// <param name="value">值</param>
     /// <param name="expireDurationInMinutes">过期时间，分钟。</param>
-    void SetValue<T>(string name, T value, float expireDurationInMinutes);
+    void SetValue<T>(String name, T value, Single expireDurationInMinutes);
 
-    void SetValue<T>(string name, T value, float expireDurationInMinutes, string path);
+    void SetValue<T>(String name, T value, Single expireDurationInMinutes, String path);
 
-    void SetValue<T>(string name, T value, bool httpOnly, bool expireWithBrowser);
+    void SetValue<T>(String name, T value, Boolean httpOnly, Boolean expireWithBrowser);
 
-    void SetValue<T>(string name, T value, bool httpOnly, bool expireWithBrowser, string path);
+    void SetValue<T>(String name, T value, Boolean httpOnly, Boolean expireWithBrowser, String path);
 
-    void SetValue<T>(string name, T value, float expireDurationInMinutes, bool httpOnly, bool expireWithBrowser, string Path);
+    void SetValue<T>(String name, T value, Single expireDurationInMinutes, Boolean httpOnly, Boolean expireWithBrowser, String Path);
 
-    void Delete(string name);
+    void Delete(String name);
 }
