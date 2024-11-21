@@ -57,11 +57,72 @@ public static class ServiceCollectionExtensions
     /// <returns></returns>
     public static T? GetPekService<T>(this IServiceProvider provider)
     {
-        if (provider == null)
-        {
-            return default;
-        }
+        if (provider == null) return default;
+
+        //// 服务类是否当前类的基类
+        //if (provider.GetType().As<T>()) return (T)provider;
 
         return (T?)provider.GetService(typeof(T));
     }
+
+    /// <summary>获取必要的服务，不存在时抛出异常</summary>
+    /// <param name="provider">服务提供者</param>
+    /// <param name="serviceType">服务类型</param>
+    /// <returns></returns>
+    public static Object GetPekRequiredService(this IServiceProvider provider, Type serviceType)
+    {
+        if (provider == null) throw new ArgumentNullException(nameof(provider));
+        if (serviceType == null) throw new ArgumentNullException(nameof(serviceType));
+
+        return provider.GetService(serviceType) ?? throw new InvalidOperationException($"Unregistered type {serviceType.FullName}");
+    }
+
+    /// <summary>获取必要的服务，不存在时抛出异常</summary>
+    /// <typeparam name="T">服务类型</typeparam>
+    /// <param name="provider">服务提供者</param>
+    /// <returns></returns>
+    public static T GetPekRequiredService<T>(this IServiceProvider provider) => provider == null ? throw new ArgumentNullException(nameof(provider)) : (T)provider.GetPekRequiredService(typeof(T));
+
+    /// <summary>获取一批服务</summary>
+    /// <typeparam name="T">服务类型</typeparam>
+    /// <param name="provider">服务提供者</param>
+    /// <returns></returns>
+    public static IEnumerable<T> GetPekServices<T>(this IServiceProvider provider) => provider.GetPekServices(typeof(T)).Cast<T>();
+
+    /// <summary>获取一批服务</summary>
+    /// <param name="provider">服务提供者</param>
+    /// <param name="serviceType">服务类型</param>
+    /// <returns></returns>
+    public static IEnumerable<Object> GetPekServices(this IServiceProvider provider, Type serviceType)
+    {
+        //var sp = provider as ServiceProvider;
+        //if (sp == null && provider is MyServiceScope scope) sp = scope.MyServiceProvider as ServiceProvider;
+        //var sp = provider.GetService<ServiceProvider>();
+        //if (sp != null && sp.Container is ObjectContainer ioc)
+        var ioc = GetPekService<ObjectContainer>(provider);
+        if (ioc != null)
+        {
+            //var list = new List<Object>();
+            //foreach (var item in ioc.Services)
+            //{
+            //    if (item.ServiceType == serviceType) list.Add(ioc.Resolve(item, provider));
+            //}
+            for (var i = ioc.Services.Count - 1; i >= 0; i--)
+            {
+                var item = ioc.Services[i];
+                if (item.ServiceType == serviceType) yield return ioc.Resolve(item, provider);
+            }
+            //return list;
+        }
+        else
+        {
+            var serviceType2 = typeof(IEnumerable<>)!.MakeGenericType(serviceType);
+            var enums = (IEnumerable<Object>)provider.GetPekRequiredService(serviceType2);
+            foreach (var item in enums)
+            {
+                yield return item;
+            }
+        }
+    }
+
 }
