@@ -48,4 +48,20 @@ public static class ServiceCollectionExtensions
 
         ObjectContainer.Provider = services.BuildServiceProvider();
     }
+
+    /// <summary>
+    /// 获取指定类型的服务对象
+    /// </summary>
+    /// <typeparam name="T">服务类型</typeparam>
+    /// <param name="provider">服务提供者</param>
+    /// <returns></returns>
+    public static T? GetPekService<T>(this IServiceProvider provider)
+    {
+        if (provider == null)
+        {
+            return default;
+        }
+
+        return (T?)provider.GetService(typeof(T));
+    }
 }
