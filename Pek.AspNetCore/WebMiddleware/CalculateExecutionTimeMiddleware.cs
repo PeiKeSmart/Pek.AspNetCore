@@ -2,6 +2,8 @@
 
 using NewLife.Log;
 
+using Pek.Webs;
+
 namespace Pek.WebMiddleware;
 
 /// <summary>
@@ -11,19 +13,26 @@ public class CalculateExecutionTimeMiddleware
 {
     private readonly RequestDelegate _next;  //下一个中间件
     Stopwatch? stopwatch;
+    private readonly IWebHelper _webHelper;
 
     /// <summary>
     /// 实例化
     /// </summary>
     /// <param name="next"></param>
-    public CalculateExecutionTimeMiddleware(RequestDelegate next) => _next = next ?? throw new ArgumentNullException(nameof(next));
+    /// <param name="webHelper"></param>
+    public CalculateExecutionTimeMiddleware(RequestDelegate next, IWebHelper webHelper)
+    {
+        _next = next ?? throw new ArgumentNullException(nameof(next));
+
+        _webHelper = webHelper;
+    }
 
     /// <summary>
     /// 调用
     /// </summary>
     /// <param name="ctx"></param>
     /// <returns></returns>
-    public async Task Invoke(HttpContext ctx)
+    public async Task Invoke(Microsoft.AspNetCore.Http.HttpContext ctx)
     {
         if (ctx.WebSockets.IsWebSocketRequest)
         {
@@ -32,7 +41,7 @@ public class CalculateExecutionTimeMiddleware
         }
 
         // 检查是否为静态资源
-        if (WebHelperEx.IsStaticResource(ctx))
+        if (_webHelper.IsStaticResource(ctx))
         {
             await _next.Invoke(ctx);
             return;
