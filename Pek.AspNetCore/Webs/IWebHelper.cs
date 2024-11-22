@@ -50,7 +50,7 @@ public partial interface IWebHelper
     /// 如果请求的资源是不需要 CMS 引擎处理的典型资源之一，则返回 true。
     /// </summary>
     /// <returns>如果请求针对的是静态资源文件，则返回真。</returns>
-    Boolean IsStaticResource(Microsoft.AspNetCore.Http.HttpContext? httpContext = null);
+    Boolean IsStaticResource();
 
     /// <summary>
     /// 修改 URL 的查询字符串

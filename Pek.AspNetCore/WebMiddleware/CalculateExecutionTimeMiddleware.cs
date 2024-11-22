@@ -41,7 +41,7 @@ public class CalculateExecutionTimeMiddleware
         }
 
         // 检查是否为静态资源
-        if (_webHelper.IsStaticResource(ctx))
+        if (_webHelper.IsStaticResource())
         {
             await _next.Invoke(ctx);
             return;
