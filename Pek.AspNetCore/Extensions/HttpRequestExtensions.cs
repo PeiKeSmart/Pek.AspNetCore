@@ -1,5 +1,8 @@
-﻿using System.Text;
+﻿using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
+
+using Microsoft.Extensions.Primitives;
 
 using NewLife;
 
@@ -164,4 +167,106 @@ public static class HttpRequestExtensions
     public static String? UserAgent(this HttpRequest request) => request.Headers["User-Agent"];
 
     #endregion
+
+    /// <summary>
+    /// 检查请求是否为 POST 请求
+    /// </summary>
+    /// <param name="request">请求检查</param>
+    /// <returns>如果请求是 POST 请求，则返回 true，否则在所有其他情况下返回 false</returns>
+    public static Boolean IsPostRequest(this HttpRequest request) => request.Method.Equals(WebRequestMethods.Http.Post, StringComparison.InvariantCultureIgnoreCase);
+
+    /// <summary>
+    /// 检查请求是否为 GET 请求
+    /// </summary>
+    /// <param name="request">要检查的请求</param>
+    /// <returns>如果请求是 GET 请求，则返回 true，所有其他情况返回 false</returns>
+    public static Boolean IsGetRequest(this HttpRequest request) => request.Method.Equals(WebRequestMethods.Http.Get, StringComparison.InvariantCultureIgnoreCase);
+
+    /// <summary>
+    /// 获取表单值
+    /// </summary>
+    /// <param name="request">请求</param>
+    /// <param name="formKey">表单密钥</param>
+    /// <returns>
+    /// 一个表示异步操作的任务
+    /// 任务结果包含表单值
+    /// </returns>
+    public static async Task<StringValues> GetFormValueAsync(this HttpRequest request, String formKey)
+    {
+        if (!request.HasFormContentType)
+            return new StringValues();
+
+        var form = await request.ReadFormAsync();
+
+        return form[formKey];
+    }
+
+    /// <summary>
+    /// 检查提供的键是否在表单中存在
+    /// </summary>
+    /// <param name="request">请求</param>
+    /// <param name="formKey">表单键</param>
+    /// <returns>
+    /// 一个表示异步操作的任务
+    /// 任务结果包含 true，如果键以表单形式持续存在，否则为 false
+    /// </returns>
+    public static async Task<Boolean> IsFormKeyExistsAsync(this HttpRequest request, String formKey) => await IsFormAnyAsync(request, key => key.Equals(formKey));
+
+    /// <summary>
+    /// 检查键是否在表单中存在
+    /// </summary>
+    /// <param name="request">请求</param>
+    /// <param name="predicate">筛选条件。设置为 null 表示无需筛选</param>
+    /// <returns>
+    /// 一个表示异步操作的任务
+    /// 任务结果包含 true，如果任何项目以表单形式持续存在，否则为 false
+    /// </returns>
+    public static async Task<Boolean> IsFormAnyAsync(this HttpRequest request, Func<String, Boolean>? predicate = null)
+    {
+        if (!request.HasFormContentType)
+            return false;
+
+        var form = await request.ReadFormAsync();
+
+        return predicate == null ? form.Any() : form.Keys.Any(predicate);
+    }
+
+    /// <summary>
+    /// 获取指定表单键对应的值
+    /// </summary>
+    /// <param name="request">请求</param>
+    /// <param name="formKey">表单密钥</param>
+    /// <returns>
+    /// 一个表示异步操作的任务
+    /// 任务结果包含 true 和表单值，如果表单包含具有指定键的元素；否则，false 和默认值。
+    /// </returns>
+    public static async Task<(bool keyExists, StringValues formValue)> TryGetFormValueAsync(this HttpRequest request, String formKey)
+    {
+        if (!request.HasFormContentType)
+            return (false, default);
+
+        var form = await request.ReadFormAsync();
+
+        var flag = form.TryGetValue(formKey, out var formValue);
+
+        return (flag, formValue);
+    }
+
+    /// <summary>
+    /// 返回 Form.Files 的首个元素，如果序列中无元素则返回默认值
+    /// </summary>
+    /// <param name="request">请求</param>
+    /// <returns>
+    /// 一个表示异步操作的任务
+    /// 任务结果包含 <see cref="IFormFile"/> 元素或默认值
+    /// </returns>
+    public static async Task<IFormFile?> GetFirstOrDefaultFileAsync(this HttpRequest request)
+    {
+        if (!request.HasFormContentType)
+            return default;
+
+        var form = await request.ReadFormAsync();
+
+        return form.Files.FirstOrDefault();
+    }
 }
