@@ -38,7 +38,7 @@ public partial class CommonHelper
     /// <summary>
     /// 获取或设置默认文件提供程序
     /// </summary>
-    public static IDHFileProvider DefaultFileProvider { get; set; }
+    public static IDHFileProvider? DefaultFileProvider { get; set; }
 
     #endregion
 
@@ -199,7 +199,7 @@ public partial class CommonHelper
     /// <param name="instance">要设置其属性的对象。</param>
     /// <param name="propertyName">要设置的属性的名称。</param>
     /// <param name="value">要将属性设置为的值。</param>
-    public static void SetProperty(object instance, string propertyName, object value)
+    public static void SetProperty(Object instance, String propertyName, Object? value)
     {
         if (instance == null)
             throw new ArgumentNullException(nameof(instance));
@@ -223,10 +223,7 @@ public partial class CommonHelper
     /// <param name="value">要转换的值。</param>
     /// <param name="destinationType">要将值转换为的类型。</param>
     /// <returns>转换后的值。</returns>
-    public static object To(object value, Type destinationType)
-    {
-        return To(value, destinationType, CultureInfo.InvariantCulture);
-    }
+    public static Object? To(Object? value, Type destinationType) => To(value, destinationType, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// 将值转换为目标类型。
@@ -235,7 +232,7 @@ public partial class CommonHelper
     /// <param name="destinationType">要将值转换为的类型。</param>
     /// <param name="culture">文化</param>
     /// <returns>转换后的值。</returns>
-    public static object To(object value, Type destinationType, CultureInfo culture)
+    public static Object? To(Object? value, Type destinationType, CultureInfo culture)
     {
         if (value == null)
             return null;
@@ -265,11 +262,9 @@ public partial class CommonHelper
     /// <param name="value">要转换的值。</param>
     /// <typeparam name="T">要将值转换为的类型。</typeparam>
     /// <returns>转换后的值。</returns>
-    public static T To<T>(object value)
-    {
+    public static T? To<T>(Object? value) =>
         //return (T)Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture);
-        return (T)To(value, typeof(T));
-    }
+        (T?)To(value, typeof(T));
 
     /// <summary>
     /// 转换前端枚举
@@ -331,25 +326,25 @@ public partial class CommonHelper
     }
 
     /// <summary>
-    /// Get private fields property value
+    /// 获取私有字段属性值
     /// </summary>
-    /// <param name="target">Target object</param>
-    /// <param name="fieldName">Field name</param>
+    /// <param name="target">目标对象</param>
+    /// <param name="fieldName">字段名称</param>
     /// <returns>Value</returns>
-    public static object GetPrivateFieldValue(object target, string fieldName)
+    public static Object? GetPrivateFieldValue(Object target, String fieldName)
     {
         if (target == null)
         {
             throw new ArgumentNullException(nameof(target), "The assignment target cannot be null.");
         }
 
-        if (string.IsNullOrEmpty(fieldName))
+        if (String.IsNullOrEmpty(fieldName))
         {
-            throw new ArgumentException("fieldName", "The field name cannot be null or empty.");
+            throw new ArgumentException("The field name cannot be null or empty.", nameof(fieldName));
         }
 
         var t = target.GetType();
-        FieldInfo fi = null;
+        FieldInfo? fi = null;
 
         while (t != null)
         {

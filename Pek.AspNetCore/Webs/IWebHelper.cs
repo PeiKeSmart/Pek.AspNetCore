@@ -76,7 +76,7 @@ public partial interface IWebHelper
     /// <typeparam name="T">返回值类型</typeparam>
     /// <param name="name">查询参数名称</param>
     /// <returns>查询字符串值</returns>
-    T QueryString<T>(String name);
+    T? QueryString<T>(String name);
 
     /// <summary>
     /// 重启应用程序域
