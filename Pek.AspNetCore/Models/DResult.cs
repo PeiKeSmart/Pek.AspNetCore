@@ -2,35 +2,35 @@
 
 public class DResult
 {
-    public bool success { get; set; }
+    public Boolean success { get; set; }
 
-    public string msg { get; set; }
+    public String? msg { get; set; }
 
     /// <summary>
     /// 状态
     /// <para>1表成功</para>
     /// </summary>
-    public int status { get; set; }
+    public Int32 status { get; set; }
 
     /// <summary>
     /// 数据
     /// </summary>
-    public object data { get; set; }
+    public Object? data { get; set; }
 
     /// <summary>
     /// 附加数据
     /// </summary>
-    public object extdata { get; set; }
+    public Object? extdata { get; set; }
 
-    public int code { get; set; }
+    public Int32 code { get; set; }
 
     /// <summary>
     /// 网址路径
     /// </summary>
-    public string locate { get; set; }
+    public String? locate { get; set; }
 }
 
 public class DResult<T> : DResult
 {
-    public T TData { get; set; }
+    public T? TData { get; set; }
 }
