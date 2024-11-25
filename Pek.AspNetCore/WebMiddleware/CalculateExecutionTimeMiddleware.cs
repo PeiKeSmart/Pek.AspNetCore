@@ -34,7 +34,7 @@ public class CalculateExecutionTimeMiddleware
     /// <returns></returns>
     public async Task Invoke(Microsoft.AspNetCore.Http.HttpContext ctx)
     {
-        if (ctx.WebSockets.IsWebSocketRequest)
+        if (ctx.WebSockets.IsWebSocketRequest && !IsSignalRRequest(ctx.Request.Path))
         {
             await _next.Invoke(ctx);
             return;
@@ -79,6 +79,17 @@ public class CalculateExecutionTimeMiddleware
     {
         var filterContents = new[] { "/greet.Greeter" }; // 需要过滤的内容
         return filterContents.Any(content => path.Contains(content, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// 检查请求路径是否为 SignalR 请求
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    private Boolean IsSignalRRequest(String path)
+    {
+        var signalRPaths = new[] { "/notify-hub" }; // SignalR 请求路径
+        return signalRPaths.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase));
     }
 }
 
