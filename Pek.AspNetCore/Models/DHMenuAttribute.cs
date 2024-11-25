@@ -12,7 +12,7 @@ public enum MenuModes
 }
 
 /// <summary>菜单特性</summary>
-public class MenuAttribute : Attribute
+public class DHMenuAttribute : Attribute
 {
     #region 属性
     /// <summary>
@@ -91,7 +91,7 @@ public class MenuAttribute : Attribute
     /// </summary>
     /// <param name="order"></param>
     /// <param name="visible"></param>
-    public MenuAttribute(Int32 order, Boolean visible = true)
+    public DHMenuAttribute(Int32 order, Boolean visible = true)
     {
         Order = order;
         CurrentVisible = visible;
