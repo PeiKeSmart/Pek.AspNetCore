@@ -1,10 +1,11 @@
-﻿using System.Net.NetworkInformation;
+﻿using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Net;
 using System.Security.Claims;
 
-using Pek.Security.Principals;
 using NewLife;
+
+using Pek.Security.Principals;
 
 namespace Pek.Helpers;
 
@@ -34,14 +35,14 @@ public static partial class DHWeb
     /// <summary>
     /// 宿主环境
     /// </summary>
-    public static IWebHostEnvironment Environment { get; set; }
+    public static IWebHostEnvironment? Environment { get; set; }
     #endregion
 
     #region Request(当前Http请求)
     /// <summary>
     /// 当前Http请求
     /// </summary>
-    public static HttpRequest Request => Pek.Webs.HttpContext.Current?.Request;
+    public static HttpRequest? Request => Webs.HttpContext.Current?.Request;
     #endregion
 
     #region HttpContext(当前Http上下文)
@@ -49,7 +50,7 @@ public static partial class DHWeb
     /// <summary>
     /// 当前Http上下文
     /// </summary>
-    public static HttpContext HttpContext => Pek.Webs.HttpContext.Current;
+    public static HttpContext HttpContext => Webs.HttpContext.Current;
 
     #endregion
 
@@ -93,7 +94,7 @@ public static partial class DHWeb
     /// <summary>
     /// 引用地址
     /// </summary>
-    public static string RefererUrl => Request.Headers["Referer"].FirstOrDefault();
+    public static String? RefererUrl => Request?.Headers["Referer"].FirstOrDefault();
     #endregion
 
     #region LocalIpAddress(本地IP)
@@ -101,16 +102,16 @@ public static partial class DHWeb
     /// <summary>
     /// 本地IP
     /// </summary>
-    public static string LocalIpAddress
+    public static String LocalIpAddress
     {
         get
         {
             try
             {
                 var ipAddress = Webs.HttpContext.Current.Connection.LocalIpAddress;
-                return IPAddress.IsLoopback(ipAddress)
+                return IPAddress.IsLoopback(ipAddress!)
                     ? IPAddress.Loopback.ToString()
-                    : ipAddress.MapToIPv4().ToString();
+                    : ipAddress!.MapToIPv4().ToString();
             }
             catch
             {
@@ -126,40 +127,34 @@ public static partial class DHWeb
     /// <summary>
     /// IP地址
     /// </summary>
-    private static string _ip;
+    private static String? _ip;
 
     /// <summary>
     /// 设置IP地址
     /// </summary>
     /// <param name="ip">IP地址</param>
-    public static void SetIp(string ip)
-    {
-        _ip = ip;
-    }
+    public static void SetIp(String ip) => _ip = ip;
 
     /// <summary>
     /// 重置IP地址
     /// </summary>
-    public static void ResetIp()
-    {
-        _ip = null;
-    }
+    public static void ResetIp() => _ip = null;
 
     /// <summary>
     /// 客户端IP地址
     /// </summary>
     // ReSharper disable once InconsistentNaming
-    public static string IP
+    public static String IP
     {
         get
         {
-            if (string.IsNullOrWhiteSpace(_ip) == false)
+            if (String.IsNullOrWhiteSpace(_ip) == false)
             {
                 return _ip;
             }
             var list = new[] { "127.0.0.1", "::1" };
-            var result = Pek.Webs.HttpContext.Current?.Connection?.RemoteIpAddress.SafeString();
-            if (string.IsNullOrWhiteSpace(result) || list.Contains(result))
+            var result = Webs.HttpContext.Current?.Connection?.RemoteIpAddress.SafeString();
+            if (String.IsNullOrWhiteSpace(result) || list.Contains(result))
             {
                 result = Runtime.Windows ? GetLanIP() : GetLanIP(NetworkInterfaceType.Ethernet);
             }
@@ -175,8 +170,7 @@ public static partial class DHWeb
     /// 获取局域网IP
     /// </summary>
     /// <returns></returns>
-    // ReSharper disable once InconsistentNaming
-    private static string GetLanIP()
+    private static String GetLanIP()
     {
         foreach (var hostAddress in Dns.GetHostAddresses(Dns.GetHostName()))
         {
@@ -185,7 +179,7 @@ public static partial class DHWeb
                 return hostAddress.ToString();
             }
         }
-        return string.Empty;
+        return String.Empty;
     }
 
     /// <summary>
@@ -195,8 +189,7 @@ public static partial class DHWeb
     /// </summary>
     /// <param name="type">网络接口类型</param>
     /// <returns></returns>
-    // ReSharper disable once InconsistentNaming
-    private static string GetLanIP(NetworkInterfaceType type)
+    private static String GetLanIP(NetworkInterfaceType type)
     {
         try
         {
@@ -222,11 +215,17 @@ public static partial class DHWeb
         }
         catch
         {
-            return string.Empty;
+            return String.Empty;
         }
 
-        return string.Empty;
+        return String.Empty;
     }
 
     #endregion
+
+    /// <summary>
+    /// 获取当前站点Url
+    /// </summary>
+    /// <returns></returns>
+    public static String GetSiteUrl() => Request?.Scheme + "://" + Request?.Host;
 }
