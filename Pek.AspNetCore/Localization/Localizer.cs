@@ -6,4 +6,4 @@
 /// <param name="text">文本内容</param>
 /// <param name="args">文本内容的参数</param>
 /// <returns>本地化字符串</returns>
-public delegate LocalizedString Localizer(string text, params object[] args);
+public delegate LocalizedString Localizer(String? text, params Object[] args);
