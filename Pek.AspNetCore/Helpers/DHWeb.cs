@@ -228,4 +228,22 @@ public static partial class DHWeb
     /// </summary>
     /// <returns></returns>
     public static String GetSiteUrl() => Request?.Scheme + "://" + Request?.Host;
+
+    #region RootPath(根路径)
+
+    /// <summary>
+    /// 根路径
+    /// </summary>
+    public static String? RootPath => Environment?.ContentRootPath;
+
+    #endregion
+
+    #region WebRootPath(Web根路径)
+
+    /// <summary>
+    /// Web根路径，即wwwroot
+    /// </summary>
+    public static String? WebRootPath => Environment?.WebRootPath;
+
+    #endregion
 }
