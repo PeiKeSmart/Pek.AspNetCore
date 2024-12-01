@@ -472,14 +472,14 @@ public partial class DHFileProvider : PhysicalFileProvider, IDHFileProvider
     /// </summary>
     /// <param name="path">要映射的路径。 例如： "~/bin"</param>
     /// <returns>物理路径。例如："c:\inetpub\wwwroot\bin"</returns>
-    public virtual string MapPath(string path)
+    public virtual String MapPath(String path)
     {
-        path = path.Replace("~/", string.Empty).TrimStart('/');
+        path = path.Replace("~/", String.Empty).TrimStart('/');
 
         //if virtual path has slash on the end, it should be after transform the virtual path to physical path too
-        var pathEnd = path.EndsWith('/') ? Path.DirectorySeparatorChar.ToString() : string.Empty;
+        var pathEnd = path.EndsWith('/') ? Path.DirectorySeparatorChar.ToString() : String.Empty;
 
-        return Combine(Root ?? string.Empty, path) + pathEnd;
+        return Combine(Root ?? String.Empty, path) + pathEnd;
     }
 
     /// <summary>
@@ -490,10 +490,8 @@ public partial class DHFileProvider : PhysicalFileProvider, IDHFileProvider
     /// 表示异步操作的任务
     /// 任务结果包含包含文件内容的字节数组
     /// </returns>
-    public virtual async Task<byte[]> ReadAllBytesAsync(string filePath)
-    {
-        return File.Exists(filePath) ? await File.ReadAllBytesAsync(filePath) : Array.Empty<byte>();
-    }
+    public virtual async Task<Byte[]> ReadAllBytesAsync(String filePath) =>
+    File.Exists(filePath) ? await File.ReadAllBytesAsync(filePath).ConfigureAwait(false) : [];
 
     /// <summary>
     /// 打开文件，用指定的编码读取文件的所有行，然后关闭文件。
@@ -504,12 +502,12 @@ public partial class DHFileProvider : PhysicalFileProvider, IDHFileProvider
     /// 表示异步操作的任务
     /// 任务结果包含包含文件所有行的字符串
     /// </returns>
-    public virtual async Task<string> ReadAllTextAsync(string path, Encoding encoding)
+    public virtual async Task<String> ReadAllTextAsync(String path, Encoding encoding)
     {
-        await using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         using var streamReader = new StreamReader(fileStream, encoding);
 
-        return await streamReader.ReadToEndAsync();
+        return await streamReader.ReadToEndAsync().ConfigureAwait(false);
     }
 
     /// <summary>
@@ -518,7 +516,7 @@ public partial class DHFileProvider : PhysicalFileProvider, IDHFileProvider
     /// <param name="path">要打开以进行读取的文件</param>
     /// <param name="encoding">应用于文件内容的编码</param>
     /// <returns>包含文件所有行的字符串</returns>
-    public virtual string ReadAllText(string path, Encoding encoding)
+    public virtual String ReadAllText(String path, Encoding encoding)
     {
         using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         using var streamReader = new StreamReader(fileStream, encoding);
@@ -532,10 +530,8 @@ public partial class DHFileProvider : PhysicalFileProvider, IDHFileProvider
     /// <param name="filePath">要写入的文件</param>
     /// <param name="bytes">要写入文件的字节</param>
     /// <returns>表示异步操作的任务</returns>
-    public virtual async Task WriteAllBytesAsync(string filePath, byte[] bytes)
-    {
-        await File.WriteAllBytesAsync(filePath, bytes);
-    }
+    public virtual async Task WriteAllBytesAsync(String filePath, Byte[] bytes) =>
+    await File.WriteAllBytesAsync(filePath, bytes).ConfigureAwait(false);
 
     /// <summary>
     /// 创建新文件，使用指定的编码将指定的字符串写入文件，然后关闭文件。如果目标文件已经存在，则会覆盖它。
@@ -544,10 +540,8 @@ public partial class DHFileProvider : PhysicalFileProvider, IDHFileProvider
     /// <param name="contents">要写入文件的字符串</param>
     /// <param name="encoding">要应用于字符串的编码</param>
     /// <returns>表示异步操作的任务</returns>
-    public virtual async Task WriteAllTextAsync(string path, string contents, Encoding encoding)
-    {
-        await File.WriteAllTextAsync(path, contents, encoding);
-    }
+    public virtual async Task WriteAllTextAsync(String path, String contents, Encoding encoding) =>
+    await File.WriteAllTextAsync(path, contents, encoding).ConfigureAwait(false);
 
     /// <summary>
     /// 创建新文件，使用指定的编码将指定的字符串写入文件，然后关闭文件。如果目标文件已经存在，则会覆盖它。
@@ -555,17 +549,14 @@ public partial class DHFileProvider : PhysicalFileProvider, IDHFileProvider
     /// <param name="path">要写入的文件</param>
     /// <param name="contents">要写入文件的字符串</param>
     /// <param name="encoding">要应用于字符串的编码</param>
-    public virtual void WriteAllText(string path, string contents, Encoding encoding)
-    {
-        File.WriteAllText(path, contents, encoding);
-    }
+    public virtual void WriteAllText(String path, String contents, Encoding encoding) => File.WriteAllText(path, contents, encoding);
 
     /// <summary>在给定路径找到文件。</summary>
     /// <param name="subpath">标识文件的相对路径。</param>
     /// <returns>文件信息。调用方必须检查Exists属性。</returns>
-    public virtual new IFileInfo GetFileInfo(string subpath)
+    public virtual new IFileInfo GetFileInfo(String subpath)
     {
-        subpath = subpath.Replace(Root, string.Empty);
+        subpath = subpath.Replace(Root, String.Empty);
 
         return base.GetFileInfo(subpath);
     }
@@ -578,12 +569,9 @@ public partial class DHFileProvider : PhysicalFileProvider, IDHFileProvider
     /// 一个System.DateTime，其中包含要为路径的最后写入日期和时间设置的值。
     /// 该值以UTC时间表示该值以UTC时间表示
     /// </param>
-    public virtual void SetLastWriteTimeUtc(string path, DateTime lastWriteTimeUtc)
-    {
-        File.SetLastWriteTimeUtc(path, lastWriteTimeUtc);
-    }
+    public virtual void SetLastWriteTimeUtc(String path, DateTime lastWriteTimeUtc) => File.SetLastWriteTimeUtc(path, lastWriteTimeUtc);
 
     #endregion
 
-    protected string WebRootPath { get; }
+    protected String WebRootPath { get; }
 }

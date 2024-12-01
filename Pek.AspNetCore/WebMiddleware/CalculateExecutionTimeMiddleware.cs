@@ -9,8 +9,7 @@ namespace Pek.WebMiddleware;
 /// <summary>
 /// 记录执行时间的中间件
 /// </summary>
-public class CalculateExecutionTimeMiddleware
-{
+public class CalculateExecutionTimeMiddleware {
     private readonly RequestDelegate _next;  //下一个中间件
     Stopwatch? stopwatch;
     private readonly IWebHelper _webHelper;
@@ -34,23 +33,23 @@ public class CalculateExecutionTimeMiddleware
     /// <returns></returns>
     public async Task Invoke(Microsoft.AspNetCore.Http.HttpContext ctx)
     {
-        if (ctx.WebSockets.IsWebSocketRequest && !IsSignalRRequest(ctx.Request.Path))
+        if (ctx.WebSockets.IsWebSocketRequest && !CalculateExecutionTimeMiddleware.IsSignalRRequest(ctx.Request.Path))
         {
-            await _next.Invoke(ctx);
+            await _next.Invoke(ctx).ConfigureAwait(false);
             return;
         }
 
         // 检查是否为静态资源
         if (_webHelper.IsStaticResource())
         {
-            await _next.Invoke(ctx);
+            await _next.Invoke(ctx).ConfigureAwait(false);
             return;
         }
 
         // 检查请求链接是否包含指定内容
-        if (ContainsFilterContent(ctx.Request.Path))
+        if (CalculateExecutionTimeMiddleware.ContainsFilterContent(ctx.Request.Path))
         {
-            await _next.Invoke(ctx);
+            await _next.Invoke(ctx).ConfigureAwait(false);
             return;
         }
 
@@ -58,7 +57,7 @@ public class CalculateExecutionTimeMiddleware
 
         try
         {
-            await _next.Invoke(ctx); // 调用下一个中间件
+            await _next.Invoke(ctx).ConfigureAwait(false); // 调用下一个中间件
         }
         finally
         {
@@ -75,7 +74,7 @@ public class CalculateExecutionTimeMiddleware
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    private Boolean ContainsFilterContent(String path)
+    private static Boolean ContainsFilterContent(String path)
     {
         var filterContents = new[] { "/greet.Greeter" }; // 需要过滤的内容
         return filterContents.Any(content => path.Contains(content, StringComparison.OrdinalIgnoreCase));
@@ -84,9 +83,9 @@ public class CalculateExecutionTimeMiddleware
     /// <summary>
     /// 检查请求路径是否为 SignalR 请求
     /// </summary>
-    /// <param name="path"></param>
+    /// <param="path"></param>
     /// <returns></returns>
-    private Boolean IsSignalRRequest(String path)
+    private static Boolean IsSignalRRequest(String path)
     {
         var signalRPaths = new[] { "/notify-hub" }; // SignalR 请求路径
         return signalRPaths.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase));
@@ -96,8 +95,7 @@ public class CalculateExecutionTimeMiddleware
 /// <summary>
 /// 记录执行时间的中间件扩展
 /// </summary>
-public static class CalculateExecutionTimeMiddlewareExtensions
-{
+public static class CalculateExecutionTimeMiddlewareExtensions {
     /// <summary>
     /// 扩展
     /// </summary>
@@ -106,10 +104,7 @@ public static class CalculateExecutionTimeMiddlewareExtensions
     /// <exception cref="ArgumentNullException"></exception>
     public static IApplicationBuilder UseCalculateExecutionTime(this IApplicationBuilder app)
     {
-        if (app == null)
-        {
-            throw new ArgumentNullException(nameof(app));
-        }
+        ArgumentNullException.ThrowIfNull(app);
         return app.UseMiddleware<CalculateExecutionTimeMiddleware>();
     }
 }

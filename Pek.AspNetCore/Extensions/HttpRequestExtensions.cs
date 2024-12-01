@@ -196,7 +196,7 @@ public static class HttpRequestExtensions
         if (!request.HasFormContentType)
             return new StringValues();
 
-        var form = await request.ReadFormAsync();
+        var form = await request.ReadFormAsync().ConfigureAwait(false);
 
         return form[formKey];
     }
@@ -210,7 +210,7 @@ public static class HttpRequestExtensions
     /// 一个表示异步操作的任务
     /// 任务结果包含 true，如果键以表单形式持续存在，否则为 false
     /// </returns>
-    public static async Task<Boolean> IsFormKeyExistsAsync(this HttpRequest request, String formKey) => await IsFormAnyAsync(request, key => key.Equals(formKey));
+    public static async Task<Boolean> IsFormKeyExistsAsync(this HttpRequest request, String formKey) => await IsFormAnyAsync(request, key => key.Equals(formKey)).ConfigureAwait(false);
 
     /// <summary>
     /// 检查键是否在表单中存在
@@ -226,9 +226,9 @@ public static class HttpRequestExtensions
         if (!request.HasFormContentType)
             return false;
 
-        var form = await request.ReadFormAsync();
+        var form = await request.ReadFormAsync().ConfigureAwait(false);
 
-        return predicate == null ? form.Any() : form.Keys.Any(predicate);
+        return predicate == null ? form.Count > 0 : form.Keys.Any(predicate);
     }
 
     /// <summary>
@@ -240,12 +240,12 @@ public static class HttpRequestExtensions
     /// 一个表示异步操作的任务
     /// 任务结果包含 true 和表单值，如果表单包含具有指定键的元素；否则，false 和默认值。
     /// </returns>
-    public static async Task<(bool keyExists, StringValues formValue)> TryGetFormValueAsync(this HttpRequest request, String formKey)
+    public static async Task<(Boolean keyExists, StringValues formValue)> TryGetFormValueAsync(this HttpRequest request, String formKey)
     {
         if (!request.HasFormContentType)
             return (false, default);
 
-        var form = await request.ReadFormAsync();
+        var form = await request.ReadFormAsync().ConfigureAwait(false);
 
         var flag = form.TryGetValue(formKey, out var formValue);
 
@@ -265,7 +265,7 @@ public static class HttpRequestExtensions
         if (!request.HasFormContentType)
             return default;
 
-        var form = await request.ReadFormAsync();
+        var form = await request.ReadFormAsync().ConfigureAwait(false);
 
         return form.Files.FirstOrDefault();
     }
