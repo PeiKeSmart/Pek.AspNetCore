@@ -8,7 +8,7 @@ public class PromptModel
     /// <summary>
     /// 返回地址
     /// </summary>
-    public String BackUrl { get; set; } = "";
+    public String? BackUrl { get; set; } = "";
 
     /// <summary>
     /// 提示信息
