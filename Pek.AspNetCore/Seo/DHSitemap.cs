@@ -59,4 +59,29 @@ public class DHSitemap : Attribute
     /// 更新频率
     /// </summary>
     public SiteMapChangeFreq ChangeFreq { get; set; }
+
+    public DHSitemap()
+    {
+    }
+
+    /// <summary>
+    /// 复制构造函数
+    /// </summary>
+    /// <param name="sitemap">要复制的DHSitemap对象</param>
+    public DHSitemap(DHSitemap sitemap)
+    {
+        IsUse = sitemap.IsUse;
+        SType = sitemap.SType;
+        Data = sitemap.Data != null ? new Dictionary<String, Object>(sitemap.Data) : null;
+        UpdateTime = sitemap.UpdateTime;
+        DisplyOrder = sitemap.DisplyOrder;
+        Url = sitemap.Url;
+        ControllerName = sitemap.ControllerName;
+        ActionName = sitemap.ActionName;
+        UniqueSeoCode = sitemap.UniqueSeoCode;
+        Priority = sitemap.Priority;
+        ChangeFreq = sitemap.ChangeFreq;
+    }
+
+    public DHSitemap Clone(DHSitemap sitemap) => new(sitemap);
 }
