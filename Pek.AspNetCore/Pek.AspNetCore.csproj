@@ -19,6 +19,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <NoWarn>1701;1702;1591;NU5104;NU1505;NETSDK1138;CS7035</NoWarn>
+    <AnalysisLevel>latest</AnalysisLevel>
     <WarningsAsErrors>CA2007</WarningsAsErrors>
     
     <!--禁止生成launchSettings.json-->
@@ -50,7 +51,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pek.Common" Version="4.0.2024.1201-beta0505" />
+    <PackageReference Include="Pek.Common" Version="4.0.2024.1204-beta0354" />
   </ItemGroup>
 
   <ItemGroup>
