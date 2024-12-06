@@ -843,9 +843,9 @@ public static partial class DHWeb
                 return;
             }
 
-            XTrace.Log.Info("下载完成，共{0:n0}字节，耗时{1:n0}毫秒", saveFile.Length, sw.ElapsedMilliseconds);
-
             FileUtil.Write(savePath, responseData!);                               // 保存文件
+
+            XTrace.Log.Info("下载完成，共{0:n0}字节，耗时{1:n0}毫秒", saveFile.Length, sw.ElapsedMilliseconds);
 
             savePath.AsFile().Extract(destdir, overwrite);
 
