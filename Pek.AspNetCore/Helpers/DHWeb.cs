@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Security.Claims;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Net.Http.Headers;
 
 using NewLife;
+using NewLife.Log;
 
 using Pek.IO;
 using Pek.Security.Principals;
@@ -804,6 +806,59 @@ public static partial class DHWeb
     /// 用户代理
     /// </summary>
     public static String? UserAgent => Request?.Headers.UserAgent;
+
+    #endregion
+
+    #region 远程下载和解压
+
+    /// <summary>根据提供的下载地址和文件名，下载到目标目录，解压Zip后返回目标文件</summary>
+    /// <param name="url">提供下载地址,不需要包含下载文件名称</param>
+    /// <param name="name">页面上指定名称的链接</param>
+    /// <param name="destdir">要下载到的目标目录</param>
+    /// <param name="overwrite">是否覆盖目标同名文件</param>
+    /// <returns></returns>
+    public static async Task DownloadLinkAndExtract(String url, String name, String destdir, Boolean overwrite = false)
+    {
+        try
+        {
+            XTrace.Log.Info("下载链接 {0}，目标 {1}", url, name);
+
+            // 指定保存文件的目录和文件名
+            var savePath = destdir.CombinePath(name); // 替换为你想保存的路径
+            savePath.EnsureDirectory();
+
+            var saveFile = savePath.AsFile();
+            if (saveFile.Exists)
+            {
+                if (!overwrite)
+                {
+                    saveFile.Delete();
+
+                    var sw = Stopwatch.StartNew();
+                    var responseData = await Client().Get(UrlHelper.Combine(url, name)).DownloadDataAsync().ConfigureAwait(false);
+                    sw.Stop();
+
+                    if (responseData == null || responseData.Length == 0)
+                    {
+                        XTrace.WriteLine($"下载{name}失败");
+                        return;
+                    }
+
+                    XTrace.Log.Info("下载完成，共{0:n0}字节，耗时{1:n0}毫秒", saveFile.Length, sw.ElapsedMilliseconds);
+
+                    FileUtil.Write(savePath, responseData!);                               // 保存文件
+                }
+            }
+            
+            savePath.AsFile().Extract(destdir);
+
+            XTrace.Log.Info("解压缩到 {0}", destdir);
+        }
+        catch(Exception ex)
+        {
+            XTrace.WriteException(ex);
+        }
+    }
 
     #endregion
 }
