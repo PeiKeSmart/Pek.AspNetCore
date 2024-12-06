@@ -151,4 +151,11 @@ public interface IRequest<out TRequest> where TRequest : IRequest<TRequest>
     /// 获取结果
     /// </summary>
     Task<String> ResultAsync();
+
+    /// <summary>
+    /// 下载数据
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<Byte[]?> DownloadDataAsync(CancellationToken cancellationToken = default);
 }

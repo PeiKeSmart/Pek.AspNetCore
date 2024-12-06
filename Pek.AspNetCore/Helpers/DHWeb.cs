@@ -543,17 +543,17 @@ public static partial class DHWeb
 
     #endregion
 
-    #region DownloadAsync(下载)
+    #region DownloadAsync(读取本地文件提供下载)
 
     /// <summary>
-    /// 下载文件
+    /// 读取本地文件提供下载
     /// </summary>
     /// <param name="filePath">文件绝对路径</param>
     /// <param name="fileName">文件名。包含扩展名</param>
     public static async Task DownloadFileAsync(String filePath, String fileName) => await DownloadFileAsync(filePath, fileName, Encoding.UTF8).ConfigureAwait(false);
 
     /// <summary>
-    /// 下载文件
+    /// 读取本地文件提供下载
     /// </summary>
     /// <param name="filePath">文件绝对路径</param>
     /// <param name="fileName">文件名。包含扩展名</param>
@@ -565,14 +565,14 @@ public static partial class DHWeb
     }
 
     /// <summary>
-    /// 下载
+    /// 读取本地文件提供下载
     /// </summary>
     /// <param name="stream">流</param>
     /// <param name="fileName">文件名。包含扩展名</param>
     public static async Task DownloadAsync(Stream stream, String fileName) => await DownloadAsync(stream, fileName, Encoding.UTF8).ConfigureAwait(false);
 
     /// <summary>
-    /// 下载
+    /// 读取本地文件提供下载
     /// </summary>
     /// <param name="stream">流</param>
     /// <param name="fileName">文件名。包含扩展名</param>
@@ -580,14 +580,14 @@ public static partial class DHWeb
     public static async Task DownloadAsync(Stream stream, String fileName, Encoding encoding) => await DownloadAsync(await FileUtil.ToBytesAsync(stream).ConfigureAwait(false), fileName, encoding).ConfigureAwait(false);
 
     /// <summary>
-    /// 下载
+    /// 读取本地文件提供下载
     /// </summary>
     /// <param name="bytes">字节流</param>
     /// <param name="fileName">文件名。包含扩展名</param>
     public static async Task DownloadAsync(Byte[] bytes, String fileName) => await DownloadAsync(bytes, fileName, Encoding.UTF8).ConfigureAwait(false);
 
     /// <summary>
-    /// 下载
+    /// 读取本地文件提供下载
     /// </summary>
     /// <param name="bytes">字节流</param>
     /// <param name="fileName">文件名。包含扩展名</param>

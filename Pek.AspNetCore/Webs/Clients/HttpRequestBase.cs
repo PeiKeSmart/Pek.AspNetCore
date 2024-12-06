@@ -5,8 +5,10 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
+using NewLife;
 using NewLife.Serialization;
 
+using System.IO;
 using Pek.Webs.Clients.Internal;
 using Pek.Webs.Clients.Parameters;
 
@@ -379,6 +381,27 @@ public abstract class HttpRequestBase<TRequest> where TRequest : IRequest<TReque
         var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         SendAfter(result, response);
         return result;
+    }
+
+    #endregion
+
+    #region ResultAsync(获取结果)
+
+    /// <summary>
+    /// 获取结果
+    /// </summary>
+    public async Task<Byte[]?> DownloadDataAsync(CancellationToken cancellationToken = default)
+    {
+        SendBefore();
+        var response = await SendAsync().ConfigureAwait(false);
+        var result = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+
+        if (result == null)
+            return null;
+
+        //SendAfter(result, response);
+
+        return await result.GetAllBytesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     #endregion
