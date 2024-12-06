@@ -830,27 +830,24 @@ public static partial class DHWeb
             var saveFile = savePath.AsFile();
             if (saveFile.Exists)
             {
-                if (!overwrite)
-                {
-                    saveFile.Delete();
-
-                    var sw = Stopwatch.StartNew();
-                    var responseData = await Client().Get(UrlHelper.Combine(url, name)).DownloadDataAsync().ConfigureAwait(false);
-                    sw.Stop();
-
-                    if (responseData == null || responseData.Length == 0)
-                    {
-                        XTrace.WriteLine($"下载{name}失败");
-                        return;
-                    }
-
-                    XTrace.Log.Info("下载完成，共{0:n0}字节，耗时{1:n0}毫秒", saveFile.Length, sw.ElapsedMilliseconds);
-
-                    FileUtil.Write(savePath, responseData!);                               // 保存文件
-                }
+                saveFile.Delete();
             }
-            
-            savePath.AsFile().Extract(destdir);
+
+            var sw = Stopwatch.StartNew();
+            var responseData = await Client().Get(UrlHelper.Combine(url, name)).DownloadDataAsync().ConfigureAwait(false);
+            sw.Stop();
+
+            if (responseData == null || responseData.Length == 0)
+            {
+                XTrace.WriteLine($"下载{name}失败");
+                return;
+            }
+
+            XTrace.Log.Info("下载完成，共{0:n0}字节，耗时{1:n0}毫秒", saveFile.Length, sw.ElapsedMilliseconds);
+
+            FileUtil.Write(savePath, responseData!);                               // 保存文件
+
+            savePath.AsFile().Extract(destdir, overwrite);
 
             XTrace.Log.Info("解压缩到 {0}", destdir);
         }
