@@ -827,12 +827,6 @@ public static partial class DHWeb
             var savePath = destdir.CombinePath(name); // 替换为你想保存的路径
             savePath.EnsureDirectory();
 
-            var saveFile = savePath.AsFile();
-            if (saveFile.Exists)
-            {
-                saveFile.Delete();
-            }
-
             var sw = Stopwatch.StartNew();
             var responseData = await Client().Get(UrlHelper.Combine(url, name)).DownloadDataAsync().ConfigureAwait(false);
             sw.Stop();
@@ -843,9 +837,15 @@ public static partial class DHWeb
                 return;
             }
 
-            FileUtil.Write(savePath, responseData!);                               // 保存文件
+            var saveFile = savePath.AsFile();
+            if (saveFile.Exists)
+            {
+                saveFile.Delete();
+            }
 
-            XTrace.Log.Info("下载完成，共{0:n0}字节，耗时{1:n0}毫秒", saveFile.Length, sw.ElapsedMilliseconds);
+            FileUtil.Write(savePath, responseData);                               // 保存文件
+
+            XTrace.Log.Info("下载完成，共{0:n0}字节，耗时{1:n0}毫秒", savePath.AsFile().Length, sw.ElapsedMilliseconds);
 
             savePath.AsFile().Extract(destdir, overwrite);
 
