@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Globalization;
 using System.Net;
 using System.Reflection;
@@ -364,4 +365,10 @@ public partial class CommonHelper
     }
 
     #endregion
+
+    /// <summary>
+    /// 系统设定
+    /// </summary>
+    public static ConcurrentDictionary<String, String> SystemSettings { get; set; } = new();
+
 }
