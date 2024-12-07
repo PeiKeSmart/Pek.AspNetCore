@@ -1,7 +1,16 @@
-﻿using NewLife.Model;
+﻿using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+using NewLife.Model;
+
+using Pek.ResumeFileResult;
+using Pek.ResumeFileResult.Executor;
 
 namespace Pek.Infrastructure;
 
+/// <summary>
+/// 依赖注入ServiceCollection容器扩展方法
+/// </summary>
 public static class ServiceCollectionExtensions
 {
     /// <summary>
@@ -48,4 +57,20 @@ public static class ServiceCollectionExtensions
 
         ObjectContainer.Provider = services.BuildServiceProvider();
     }
+
+    /// <summary>
+    /// 注入断点续传服务
+    /// </summary>
+    /// <param name="services"></param>
+    /// <returns></returns>
+    public static IServiceCollection AddResumeFileResult(this IServiceCollection services)
+    {
+        services.TryAddSingleton<IActionResultExecutor<ResumePhysicalFileResult>, ResumePhysicalFileResultExecutor>();
+        services.TryAddSingleton<IActionResultExecutor<ResumeVirtualFileResult>, ResumeVirtualFileResultExecutor>();
+        services.TryAddSingleton<IActionResultExecutor<ResumeFileStreamResult>, ResumeFileStreamResultExecutor>();
+        services.TryAddSingleton<IActionResultExecutor<ResumeFileContentResult>, ResumeFileContentResultExecutor>();
+        return services;
+    }
+
+
 }
