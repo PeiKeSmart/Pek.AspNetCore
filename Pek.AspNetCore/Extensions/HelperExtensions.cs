@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
-namespace Pek.Extensions;
+namespace Pek;
 
 public static class HelperExtensions
 {
