@@ -41,6 +41,11 @@ public class DHSitemap : Attribute
     public String? ControllerName { get; set; }
 
     /// <summary>
+    /// 路由名称。当有路由名称时，将会使用路由名称生成Url
+    /// </summary>
+    public String? RouterName { get; set; }
+
+    /// <summary>
     /// 动作名称
     /// </summary>
     public String? ActionName { get; set; }
