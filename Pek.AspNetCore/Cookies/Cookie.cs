@@ -121,15 +121,13 @@ public class Cookie : ICookie
                 {
                     Expires = DateTime.Now.AddMinutes(expireDurationInMinutes),
                     HttpOnly = httpOnly,
-                    Path = path
+                    Path = path,
+                    SameSite = SameSiteMode.None
                 });
             }
 
         }
     }
 
-    public void Delete(String name)
-    {
-        _httpContext?.Response.Cookies.Append(name, "", new CookieOptions { Expires = DateTime.Now.AddDays(-1d) });
-    }
+    public void Delete(String name) => _httpContext?.Response.Cookies.Append(name, "", new CookieOptions { Expires = DateTime.Now.AddDays(-1d) });
 }
