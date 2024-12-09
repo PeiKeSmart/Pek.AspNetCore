@@ -5,18 +5,13 @@ using NewLife.Serialization;
 
 namespace Pek.Cookies;
 
-public class Cookie : ICookie
+public class Cookie(IHttpContextAccessor httpContextAccessor) : ICookie
 {
-    private readonly HttpContext? _httpContext;
+    private readonly HttpContext? _httpContext = httpContextAccessor.HttpContext;
     private const Single DefaultExpireDurationMinutes = 43200; // 1 month
     private const Boolean DefaultHttpOnly = true;
     private const Boolean ExpireWithBrowser = false;
     private const String DefaultPath = "/";
-
-    public Cookie(IHttpContextAccessor httpContextAccessor)
-    {
-        _httpContext = httpContextAccessor.HttpContext;
-    }
 
     public T? GetValue<T>(String name) => GetValue<T>(name, false);
 
@@ -59,35 +54,17 @@ public class Cookie : ICookie
         return value;
     }
 
-    public void SetValue<T>(String name, T value)
-    {
-        SetValue(name, value, DefaultExpireDurationMinutes, DefaultHttpOnly, ExpireWithBrowser, DefaultPath);
-    }
+    public void SetValue<T>(String name, T value) => SetValue(name, value, DefaultExpireDurationMinutes, DefaultHttpOnly, ExpireWithBrowser, DefaultPath);
 
-    public void SetValue<T>(String name, T value, String path)
-    {
-        SetValue(name, value, DefaultExpireDurationMinutes, DefaultHttpOnly, ExpireWithBrowser, path);
-    }
+    public void SetValue<T>(String name, T value, String path) => SetValue(name, value, DefaultExpireDurationMinutes, DefaultHttpOnly, ExpireWithBrowser, path);
 
-    public void SetValue<T>(String name, T value, Single expireDurationInMinutes)
-    {
-        SetValue(name, value, expireDurationInMinutes, DefaultHttpOnly, ExpireWithBrowser, DefaultPath);
-    }
+    public void SetValue<T>(String name, T value, Single expireDurationInMinutes) => SetValue(name, value, expireDurationInMinutes, DefaultHttpOnly, ExpireWithBrowser, DefaultPath);
 
-    public void SetValue<T>(String name, T value, Single expireDurationInMinutes, String path)
-    {
-        SetValue(name, value, expireDurationInMinutes, DefaultHttpOnly, ExpireWithBrowser, path);
-    }
+    public void SetValue<T>(String name, T value, Single expireDurationInMinutes, String path) => SetValue(name, value, expireDurationInMinutes, DefaultHttpOnly, ExpireWithBrowser, path);
 
-    public void SetValue<T>(String name, T value, Boolean httpOnly, Boolean expireWithBrowser)
-    {
-        SetValue(name, value, DefaultExpireDurationMinutes, httpOnly, expireWithBrowser, DefaultPath);
-    }
+    public void SetValue<T>(String name, T value, Boolean httpOnly, Boolean expireWithBrowser) => SetValue(name, value, DefaultExpireDurationMinutes, httpOnly, expireWithBrowser, DefaultPath);
 
-    public void SetValue<T>(String name, T value, Boolean httpOnly, Boolean expireWithBrowser, String path)
-    {
-        SetValue(name, value, DefaultExpireDurationMinutes, httpOnly, expireWithBrowser, path);
-    }
+    public void SetValue<T>(String name, T value, Boolean httpOnly, Boolean expireWithBrowser, String path) => SetValue(name, value, DefaultExpireDurationMinutes, httpOnly, expireWithBrowser, path);
 
     public void SetValue<T>(String name, T value, Single expireDurationInMinutes, Boolean httpOnly, Boolean expireWithBrowser, String path)
     {
@@ -117,13 +94,20 @@ public class Cookie : ICookie
             }
             else
             {
-                _httpContext?.Response.Cookies.Append(name, cookieValue, new CookieOptions
+                var options = new CookieOptions
                 {
                     Expires = DateTime.Now.AddMinutes(expireDurationInMinutes),
                     HttpOnly = httpOnly,
                     Path = path,
-                    SameSite = SameSiteMode.None
-                });
+                    SameSite = SameSiteMode.Lax,
+                };
+
+                if (_httpContext?.Request.IsHttps == true)
+                {
+                    options.Secure = true;
+                }
+
+                _httpContext?.Response.Cookies.Append(name, cookieValue, options);
             }
 
         }
