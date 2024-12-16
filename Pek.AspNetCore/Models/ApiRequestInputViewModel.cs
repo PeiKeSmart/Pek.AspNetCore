@@ -10,7 +10,7 @@ public class ApiRequestInputViewModel
     /// <summary>
     /// 请求来源IP
     /// </summary>
-    public String RequestIP { get; set; }
+    public String? RequestIP { get; set; }
 
     /// <summary>
     /// 请求路径
@@ -25,7 +25,7 @@ public class ApiRequestInputViewModel
     /// <summary>
     /// 请求参数字符串
     /// </summary>
-    public String Query { get; set; }
+    public String? Query { get; set; }
 
     /// <summary>
     /// 请求报文，POST专用
