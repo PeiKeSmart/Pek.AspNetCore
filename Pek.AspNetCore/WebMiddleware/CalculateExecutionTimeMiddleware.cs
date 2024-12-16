@@ -11,7 +11,6 @@ namespace Pek.WebMiddleware;
 /// </summary>
 public class CalculateExecutionTimeMiddleware {
     private readonly RequestDelegate _next;  //下一个中间件
-    Stopwatch? stopwatch;
     private readonly IWebHelper _webHelper;
 
     /// <summary>
@@ -33,7 +32,7 @@ public class CalculateExecutionTimeMiddleware {
     /// <returns></returns>
     public async Task Invoke(Microsoft.AspNetCore.Http.HttpContext ctx)
     {
-        if (ctx.WebSockets.IsWebSocketRequest && !CalculateExecutionTimeMiddleware.IsSignalRRequest(ctx.Request.Path))
+        if (ctx.WebSockets.IsWebSocketRequest && !IsSignalRRequest(ctx.Request.Path))
         {
             await _next.Invoke(ctx).ConfigureAwait(false);
             return;
@@ -47,7 +46,7 @@ public class CalculateExecutionTimeMiddleware {
         }
 
         // 检查请求链接是否包含指定内容
-        if (CalculateExecutionTimeMiddleware.ContainsFilterContent(ctx.Request.Path))
+        if (ContainsFilterContent(ctx.Request.Path))
         {
             await _next.Invoke(ctx).ConfigureAwait(false);
             return;
@@ -83,7 +82,7 @@ public class CalculateExecutionTimeMiddleware {
     /// <summary>
     /// 检查请求路径是否为 SignalR 请求
     /// </summary>
-    /// <param="path"></param>
+    /// <param name="path"></param>
     /// <returns></returns>
     private static Boolean IsSignalRRequest(String path)
     {
