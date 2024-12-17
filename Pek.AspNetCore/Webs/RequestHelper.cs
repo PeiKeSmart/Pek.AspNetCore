@@ -30,7 +30,9 @@ public static class RequestHelper
         // 拒绝output关键字，避免死循环
         if (key == "output") return null;
 
-        return null;
+        var entityBody = request.GetRequestBody<NullableDictionary<String, Object>>();
+        if (entityBody == null) return null;
+        return !entityBody.TryGetValue(key, out var v) ? null : v?.ToString();
     }
 
     /// <summary>
@@ -91,9 +93,10 @@ public static class RequestHelper
 
             return entityBody;
         }
-        catch (Exception)
+        catch
         {
             return null;
         }
     }
+
 }

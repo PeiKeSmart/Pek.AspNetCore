@@ -1,5 +1,6 @@
-﻿using NewLife;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
+
+using NewLife;
 
 namespace Pek.Webs;
 
@@ -320,7 +321,7 @@ public class UserAgentParser
 
     private void ParseOtherBrowser(String[] infos)
     {
-        var list = infos.Where(e => !e.Contains("(") && !e.StartsWithIgnoreCase("Mozilla/", "AppleWebKit/", "Chrome/", "Safari/", "Gecko/", "Mobile/", "Version/") && !e.EqualIgnoreCase("Mobile")).ToList();
+        var list = infos.Where(e => !e.Contains('(') && !e.StartsWithIgnoreCase("Mozilla/", "AppleWebKit/", "Chrome/", "Safari/", "Gecko/", "Mobile/", "Version/") && !e.EqualIgnoreCase("Mobile")).ToList();
         if (list.Count == 0) return;
 
         Brower = list[0];
