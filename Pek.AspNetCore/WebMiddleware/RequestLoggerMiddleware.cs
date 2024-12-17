@@ -88,6 +88,11 @@ public class RequestLoggerMiddleware(
                 return Task.CompletedTask;
             });
         }
+        else
+        {
+            // 或请求管道中调用下一个中间件
+            await _next(context).ConfigureAwait(false);
+        }
     }
 
     /// <summary>
