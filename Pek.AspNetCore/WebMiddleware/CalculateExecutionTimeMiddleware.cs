@@ -32,7 +32,7 @@ public class CalculateExecutionTimeMiddleware {
     /// <returns></returns>
     public async Task Invoke(Microsoft.AspNetCore.Http.HttpContext ctx)
     {
-        if (ctx.WebSockets.IsWebSocketRequest && !IsSignalRRequest(ctx.Request.Path))
+        if (ctx.WebSockets.IsWebSocketRequest || IsSignalRRequest(ctx.Request.Path))
         {
             await _next.Invoke(ctx).ConfigureAwait(false);
             return;
@@ -75,7 +75,7 @@ public class CalculateExecutionTimeMiddleware {
     /// <returns></returns>
     private static Boolean ContainsFilterContent(String path)
     {
-        var filterContents = new[] { "/greet.Greeter" }; // 需要过滤的内容
+        var filterContents = new[] { "/greet.Greeter", "/health" }; // 需要过滤的内容
         return filterContents.Any(content => path.Contains(content, StringComparison.OrdinalIgnoreCase));
     }
 

@@ -43,7 +43,7 @@ public class RequestLoggerMiddleware(
             {
                 foreach (var item in PekSysSetting.Current.ExcludeUrl.Split(','))
                 {
-                    if (context.Request.Path.Value?.Contains(item, StringComparison.OrdinalIgnoreCase) == true)
+                    if (!item.IsNullOrWhiteSpace() && context.Request.Path.Value?.Contains(item, StringComparison.OrdinalIgnoreCase) == true)
                     {
                         // 或请求管道中调用下一个中间件
                         await _next(context).ConfigureAwait(false);
@@ -83,7 +83,7 @@ public class RequestLoggerMiddleware(
             // 响应完成时存入缓存
             context.Response.OnCompleted(() =>
             {
-                XTrace.WriteLine($"RequestLog:{DateTime.Now.ToString("yyyyMMddHHmmssfff") + (new Random()).Next(0, 10000)}-{api.ElapsedTime}ms-{api.ToJson()}");
+                XTrace.WriteLine($"RequestLog:{DateTime.Now.ToString("yyyyMMddHHmmssfff") + (new Random()).Next(0, 10000)}-{api.ToJson()}");
 
                 return Task.CompletedTask;
             });
