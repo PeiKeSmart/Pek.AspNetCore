@@ -13,4 +13,16 @@ public class PekSysSetting : Config<PekSysSetting>
     [Description("机器人错误码。设置后拦截各种爬虫并返回相应错误，如404/500，默认0不拦截")]
     [Category("通用")]
     public Int32 RobotError { get; set; }
+
+    /// <summary>
+    /// 是否允许获取请求和响应内容
+    /// </summary>
+    [Description("是否允许获取请求和响应内容")]
+    public Boolean AllowRequestParams { get; set; }
+
+    /// <summary>
+    /// 允许获取请求和响应内容时排除的Url关键词，多个以逗号分隔
+    /// </summary>
+    [Description("允许获取请求和响应内容时排除的Url关键词，多个以逗号分隔")]
+    public String? ExcludeUrl { get; set; }
 }
