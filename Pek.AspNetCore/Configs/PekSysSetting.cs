@@ -1,0 +1,16 @@
+﻿using System.ComponentModel;
+
+using NewLife.Configuration;
+
+namespace Pek.Configs;
+
+/// <summary>系统通用配置</summary>
+[DisplayName("系统通用配置")]
+[Config("PekSys")]
+public class PekSysSetting : Config<PekSysSetting>
+{
+    /// <summary>机器人错误码。设置后拦截各种爬虫并返回相应错误，如404/500，默认0不拦截</summary>
+    [Description("机器人错误码。设置后拦截各种爬虫并返回相应错误，如404/500，默认0不拦截")]
+    [Category("通用")]
+    public Int32 RobotError { get; set; }
+}
