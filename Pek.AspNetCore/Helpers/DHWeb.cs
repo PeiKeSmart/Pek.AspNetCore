@@ -32,6 +32,10 @@ public static partial class DHWeb
         {
             Environment = Pek.Webs.HttpContext.Current.RequestServices.GetService<IWebHostEnvironment>();
             ServicePointManager.DefaultConnectionLimit = 10000000;  // 用来限制客户端请求的并发最大连接数
+
+            ServicePointManager.ReusePort = true;  // 可以让不同的HTTP请求重用相同的本地端口。
+
+            ServicePointManager.Expect100Continue = false;  // 询问服务器是否愿意接受数据,禁用此选项可能会提高性能。
         }
         catch
         {
