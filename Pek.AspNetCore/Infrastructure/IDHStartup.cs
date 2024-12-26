@@ -52,11 +52,6 @@ public interface IPekStartup: IDHStartup
     /// </summary>
     /// <param name="application"></param>
     void AfterAuth(IApplicationBuilder application);
-
-    /// <summary>
-    /// 获取此启动配置实现的顺序。主要针对ConfigureMiddleware、UseRouting前执行的数据、UseAuthentication或者UseAuthorization后面 Endpoints前执行的数据
-    /// </summary>
-    Int32 ConfigureOrder { get; }
 }
 
 public class DHConast
