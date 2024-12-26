@@ -26,6 +26,16 @@ public interface IPekStartup: IDHStartup
     void UseDHEndpoints(IEndpointRouteBuilder endpoints);
 
     /// <summary>
+    /// 将区域路由写入数据库
+    /// </summary>
+    void ConfigureArea();
+
+    /// <summary>
+    /// 调整菜单
+    /// </summary>
+    void ChangeMenu();
+
+    /// <summary>
     /// 配置使用添加的中间件
     /// </summary>
     /// <param name="application">用于配置应用程序的请求管道的生成器</param>
@@ -43,7 +53,10 @@ public interface IPekStartup: IDHStartup
     /// <param name="application"></param>
     void AfterAuth(IApplicationBuilder application);
 
-    
+    /// <summary>
+    /// 获取此启动配置实现的顺序。主要针对ConfigureMiddleware、UseRouting前执行的数据、UseAuthentication或者UseAuthorization后面 Endpoints前执行的数据
+    /// </summary>
+    Int32 ConfigureOrder { get; }
 }
 
 public class DHConast
