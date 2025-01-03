@@ -2,6 +2,7 @@
 
 using NewLife.Log;
 
+using Pek.Configs;
 using Pek.Webs;
 
 namespace Pek.WebMiddleware;
@@ -32,6 +33,12 @@ public class CalculateExecutionTimeMiddleware {
     /// <returns></returns>
     public async Task Invoke(Microsoft.AspNetCore.Http.HttpContext ctx)
     {
+        if (!PekSysSetting.Current.AllowRequestParams)  // 允许获取则执行
+        {
+            await _next.Invoke(ctx).ConfigureAwait(false);
+            return;
+        }
+
         if (ctx.WebSockets.IsWebSocketRequest || IsSignalRRequest(ctx.Request.Path))
         {
             await _next.Invoke(ctx).ConfigureAwait(false);
