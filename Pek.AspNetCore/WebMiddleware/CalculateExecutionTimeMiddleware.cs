@@ -1,8 +1,7 @@
 ﻿using System.Diagnostics;
 
-using NewLife.Log;
-
 using Pek.Configs;
+using Pek.Log;
 using Pek.Webs;
 
 namespace Pek.WebMiddleware;
@@ -71,7 +70,7 @@ public class CalculateExecutionTimeMiddleware {
             var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
 
             // 记录请求耗时
-            XTrace.WriteLine($"请求{ctx.Request.Path}耗时{elapsedMilliseconds}ms");
+            DTrace.WriteLine($"请求{ctx.Request.Path}耗时{elapsedMilliseconds}ms", "CalculateExecutionTimeMiddleware");
         }
     }
 
