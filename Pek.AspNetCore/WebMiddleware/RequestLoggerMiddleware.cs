@@ -52,7 +52,7 @@ public class RequestLoggerMiddleware(
                 }
             }
 
-            DTrace.WriteLine($"Handling request: " + context.Request.Path, "RequestLoggerMiddleware");
+            DTrace.WriteLine($"Handling request: " + context.Request.Path, "DHWeb.RequestLoggerMiddleware");
 
             var api = new ApiRequestInputViewModel
             {
@@ -83,7 +83,7 @@ public class RequestLoggerMiddleware(
             // 响应完成时存入缓存
             context.Response.OnCompleted(() =>
             {
-                DTrace.WriteLine($"RequestLog:{DateTime.Now.ToString("yyyyMMddHHmmssfff") + (new Random()).Next(0, 10000)}-{api.ToJson()}", "RequestLoggerMiddleware");
+                DTrace.WriteLine($"RequestLog:{DateTime.Now.ToString("yyyyMMddHHmmssfff") + (new Random()).Next(0, 10000)}-{api.ToJson()}", "DHWeb.RequestLoggerMiddleware");
 
                 return Task.CompletedTask;
             });

@@ -70,7 +70,7 @@ public class CalculateExecutionTimeMiddleware {
             var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
 
             // 记录请求耗时
-            DTrace.WriteLine($"请求{ctx.Request.Path}耗时{elapsedMilliseconds}ms", "CalculateExecutionTimeMiddleware");
+            DTrace.WriteLine($"请求{ctx.Request.Path}耗时{elapsedMilliseconds}ms", "CalculateExecutionTimeMiddleware.Invoke");
         }
     }
 
