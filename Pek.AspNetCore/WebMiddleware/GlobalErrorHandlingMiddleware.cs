@@ -1,5 +1,8 @@
 ﻿namespace Pek.WebMiddleware;
 
+/// <summary>
+/// 全局错误处理中间件
+/// </summary>
 public class GlobalErrorHandlingMiddleware
 {
     private readonly RequestDelegate _next;  //下一个中间件
@@ -44,5 +47,23 @@ public class GlobalErrorHandlingMiddleware
 
         // 如果需要继续向上传递异常，可以重新抛出
         throw exception;
+    }
+}
+
+/// <summary>
+/// 记录执行时间的中间件扩展
+/// </summary>
+public static class GlobalErrorHandlingMiddlewareExtensions
+{
+    /// <summary>
+    /// 扩展
+    /// </summary>
+    /// <param name="app"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public static IApplicationBuilder UseGlobalErrorHandling(this IApplicationBuilder app)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+        return app.UseMiddleware<GlobalErrorHandlingMiddleware>();
     }
 }
