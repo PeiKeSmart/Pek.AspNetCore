@@ -10,9 +10,9 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Net.Http.Headers;
 
 using NewLife;
+using NewLife.Log;
 
 using Pek.IO;
-using Pek.Log;
 using Pek.Security.Principals;
 
 namespace Pek.Helpers;
@@ -825,7 +825,7 @@ public static partial class DHWeb
     {
         try
         {
-            DTrace.Log.Info("[DHWeb.DownloadLinkAndExtract]:下载链接 {0}，目标 {1}", url, name);
+            XTrace.Log.Info("[DHWeb.DownloadLinkAndExtract]:下载链接 {0}，目标 {1}", url, name);
 
             // 指定保存文件的目录和文件名
             var savePath = destdir.CombinePath(name); // 替换为你想保存的路径
@@ -837,7 +837,7 @@ public static partial class DHWeb
 
             if (responseData == null || responseData.Length == 0)
             {
-                DTrace.WriteLine($"下载{name}失败", "DHWeb.DownloadLinkAndExtract");
+                XTrace.WriteLine($"[DHWeb.DownloadLinkAndExtract]下载{name}失败");
                 return;
             }
 
@@ -849,15 +849,15 @@ public static partial class DHWeb
 
             FileUtil.Write(savePath, responseData);                               // 保存文件
 
-            DTrace.Log.Info("[DHWeb.DownloadLinkAndExtract]下载完成，共{0:n0}字节，耗时{1:n0}毫秒", savePath.AsFile().Length, sw.ElapsedMilliseconds);
+            XTrace.Log.Info("[DHWeb.DownloadLinkAndExtract]下载完成，共{0:n0}字节，耗时{1:n0}毫秒", savePath.AsFile().Length, sw.ElapsedMilliseconds);
 
             savePath.AsFile().Extract(destdir, overwrite);
 
-            DTrace.Log.Info("[DHWeb.DownloadLinkAndExtract]解压缩到 {0}", destdir);
+            XTrace.Log.Info("[DHWeb.DownloadLinkAndExtract]解压缩到 {0}", destdir);
         }
         catch(Exception ex)
         {
-            DTrace.WriteException(ex);
+            XTrace.WriteException(ex);
         }
     }
 

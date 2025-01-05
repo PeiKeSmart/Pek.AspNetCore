@@ -2,10 +2,10 @@
 
 using NewLife;
 using NewLife.Collections;
+using NewLife.Log;
 using NewLife.Serialization;
 
 using Pek.Configs;
-using Pek.Log;
 using Pek.Models;
 
 namespace Pek.WebMiddleware;
@@ -52,7 +52,7 @@ public class RequestLoggerMiddleware(
                 }
             }
 
-            DTrace.WriteLine($"Handling request: " + context.Request.Path, "DHWeb.RequestLoggerMiddleware");
+            XTrace.WriteLine($"[DHWeb.RequestLoggerMiddleware]Handling request: " + context.Request.Path);
 
             var api = new ApiRequestInputViewModel
             {
@@ -83,7 +83,7 @@ public class RequestLoggerMiddleware(
             // 响应完成时存入缓存
             context.Response.OnCompleted(() =>
             {
-                DTrace.WriteLine($"RequestLog:{DateTime.Now.ToString("yyyyMMddHHmmssfff") + (new Random()).Next(0, 10000)}-{api.ToJson()}", "DHWeb.RequestLoggerMiddleware");
+                XTrace.WriteLine($"[DHWeb.RequestLoggerMiddleware]RequestLog:{DateTime.Now.ToString("yyyyMMddHHmmssfff") + (new Random()).Next(0, 10000)}-{api.ToJson()}");
 
                 return Task.CompletedTask;
             });
