@@ -51,7 +51,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pek.Common" Version="4.0.2025.114-beta0324" />
+    <PackageReference Include="Pek.Common" Version="4.0.2025.207-beta0414" />
   </ItemGroup>
 
   <ItemGroup>
@@ -60,7 +60,7 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson">
-      <Version>9.0.0</Version>
+      <Version>9.0.1</Version>
     </PackageReference>
   </ItemGroup>
 
