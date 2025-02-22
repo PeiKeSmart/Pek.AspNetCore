@@ -88,6 +88,53 @@ public class RequestLoggerMiddleware(
                 return Task.CompletedTask;
             });
         }
+        else if (!PekSysSetting.Current.RequestParamsUrl.IsNullOrWhiteSpace())
+        {
+            var list = PekSysSetting.Current.RequestParamsUrl.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            if (list.All(item => item.IsNullOrWhiteSpace()) ||
+                (list.Length != 0 && !list.Any(item => context.Request.Path.Value?.Contains(item, StringComparison.OrdinalIgnoreCase) == true)))
+            {
+                // 或请求管道中调用下一个中间件
+                await _next(context).ConfigureAwait(false);
+                return;
+            }
+
+            XTrace.WriteLine($"[DHWeb.RequestLoggerMiddleware]Handling request: " + context.Request.Path);
+
+            var api = new ApiRequestInputViewModel
+            {
+                HttpType = context.Request.Method,
+                Query = context.Request.QueryString.Value,
+                RequestUrl = context.Request.Path,
+                RequestName = "",
+                RequestIP = context.Request.Host.Value,
+            };
+
+            // 记录请求参数
+            await LogRequest(context, api).ConfigureAwait(false);
+
+            // 拦截响应流
+            var originalResponseBodyStream = context.Response.Body;
+            using var responseBodyStream = new MemoryStream();
+            context.Response.Body = responseBodyStream;
+
+            // 处理请求
+            await _next(context).ConfigureAwait(false);
+
+            // 记录响应详情
+            await LogResponse(context, responseBodyStream, api).ConfigureAwait(false);
+
+            // 重置原始响应体流
+            await responseBodyStream.CopyToAsync(originalResponseBodyStream).ConfigureAwait(false);
+
+            // 响应完成时存入缓存
+            context.Response.OnCompleted(() =>
+            {
+                XTrace.WriteLine($"[DHWeb.RequestLoggerMiddleware]RequestLog:{DateTime.Now.ToString("yyyyMMddHHmmssfff") + (new Random()).Next(0, 10000)}-{api.ToJson()}");
+
+                return Task.CompletedTask;
+            });
+        }
         else
         {
             // 或请求管道中调用下一个中间件

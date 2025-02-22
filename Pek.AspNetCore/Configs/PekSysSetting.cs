@@ -25,4 +25,10 @@ public class PekSysSetting : Config<PekSysSetting>
     /// </summary>
     [Description("允许获取请求和响应内容时排除的Url关键词，多个以逗号分隔")]
     public String? ExcludeUrl { get; set; }
+
+    /// <summary>
+    /// AllowRequestParams为false时，允许获取请求和响应内容时的Url关键词，多个以逗号分隔
+    /// </summary>
+    [Description("AllowRequestParams为false时，允许获取请求和响应内容时的Url关键词，多个以逗号分隔")]
+    public String RequestParamsUrl { get; set; } = String.Empty;
 }
