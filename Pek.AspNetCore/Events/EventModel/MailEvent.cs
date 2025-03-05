@@ -40,4 +40,9 @@ public class MailEvent
     /// 语言
     /// </summary>
     public String? Lng { get; set; }
+
+    /// <summary>
+    /// 会话ID
+    /// </summary>
+    public Int64 SId { get; set; }
 }
