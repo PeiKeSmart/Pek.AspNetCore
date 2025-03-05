@@ -7,7 +7,7 @@ namespace Pek.Events.EventModel;
 /// </summary>
 public class MailEvent
 {
-    public MailEvent(DResult result, Boolean checkCode, String imgCheckCode, String account, String lng)
+    public MailEvent(DResult result, Boolean checkCode, String? imgCheckCode, String account, String? lng)
     {
         Result = result;
         CheckCode = checkCode;
@@ -29,7 +29,7 @@ public class MailEvent
     /// <summary>
     /// 图片验证码
     /// </summary>
-    public String ImgCheckCode { get; set; }
+    public String? ImgCheckCode { get; set; }
 
     /// <summary>
     /// 账号
@@ -39,5 +39,5 @@ public class MailEvent
     /// <summary>
     /// 语言
     /// </summary>
-    public String Lng { get; set; }
+    public String? Lng { get; set; }
 }
