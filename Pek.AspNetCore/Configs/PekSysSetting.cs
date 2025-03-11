@@ -31,4 +31,10 @@ public class PekSysSetting : Config<PekSysSetting>
     /// </summary>
     [Description("AllowRequestParams为false时，允许获取请求和响应内容时的Url关键词，多个以逗号分隔")]
     public String RequestParamsUrl { get; set; } = String.Empty;
+
+    /// <summary>
+    /// 在客户浏览器地址栏中启用博客 RSS feeds 链接
+    /// </summary>
+    [Description("在客户浏览器地址栏中启用博客 RSS feeds 链接")]
+    public Boolean ShowHeaderRssUrl { get; set; }
 }
