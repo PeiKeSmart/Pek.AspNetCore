@@ -47,7 +47,7 @@ public class AntiDuplicateRequestAttribute : ActionFilterAttribute
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(next);
 
-        var @lock = AntiDuplicateRequestAttribute.CreateLock();
+        var @lock = CreateLock();
         var key = GetKey(context);
         try
         {

@@ -15,7 +15,7 @@ public class DefaultLock : ILock
     /// <summary>
     /// 锁定标识
     /// </summary>
-    private String _key;
+    private String _key = String.Empty;
 
     /// <summary>
     /// 延迟执行时间
@@ -33,7 +33,7 @@ public class DefaultLock : ILock
     /// </summary>
     /// <param name="key">锁定标识</param>
     /// <param name="expiration">锁定时间间隔</param>
-    public bool Lock(String key, Int32 expiration)
+    public Boolean Lock(String key, Int32 expiration)
     {
         _key = key;
         _expiration = expiration;
