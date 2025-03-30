@@ -26,7 +26,7 @@ public class DefaultLock : ILock
     /// 初始化一个<see cref="DefaultLock"/>类型的实例
     /// </summary>
     /// <param name="cache">缓存提供程序</param>
-    public DefaultLock(ICache cache) => _cache = cache;
+    public DefaultLock(ICacheProvider cache) => _cache = cache.Cache;
 
     /// <summary>
     /// 锁定，成功锁定返回true，false代表之前已被锁定
