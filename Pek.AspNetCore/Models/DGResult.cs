@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
 using NewLife;
+
 using Pek.Helpers;
 
 namespace Pek.Models;
@@ -16,19 +17,24 @@ public class DGResult : JsonResult
     public StateCode Code { get; set; } = StateCode.Fail;
 
     /// <summary>
+    /// 错误码
+    /// </summary>
+    public Int32 ErrCode { get; set; }
+
+    /// <summary>
     /// 消息
     /// </summary>
-    public string Message { get; set; }
+    public String? Message { get; set; }
 
     /// <summary>
     /// 数据
     /// </summary>
-    public dynamic Data { get; set; }
+    public dynamic? Data { get; set; }
 
     /// <summary>
     /// 其他数据
     /// </summary>
-    public dynamic ExtData { get; set; }
+    public dynamic? ExtData { get; set; }
 
     /// <summary>
     /// 操作时间
@@ -38,7 +44,7 @@ public class DGResult : JsonResult
     /// <summary>
     /// 标识
     /// </summary>
-    public String Id { get; set; }
+    public String? Id { get; set; }
 
     /// <summary>
     /// 初始化返回结果
@@ -56,7 +62,7 @@ public class DGResult : JsonResult
     /// <param name="message">消息</param>
     /// <param name="data">数据</param>
     /// <param name="extdata">其他数据</param>
-    public DGResult(StateCode code, string message, dynamic data = null, dynamic extdata = null) : base(null)
+    public DGResult(StateCode code, String message, dynamic? data = null, dynamic? extdata = null) : base(null)
     {
         Code = code;
         Message = message;
@@ -71,8 +77,7 @@ public class DGResult : JsonResult
     /// </summary>
     public override Task ExecuteResultAsync(ActionContext context)
     {
-        if (context == null)
-            throw new ArgumentNullException(nameof(context));
+        ArgumentNullException.ThrowIfNull(context);
 
         if (Id.IsNullOrWhiteSpace())
             Id = Guid.NewGuid().ToString();
