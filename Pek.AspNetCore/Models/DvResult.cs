@@ -22,6 +22,11 @@ public class DvResult : JsonResult
     public StateCode code { get; set; } = StateCode.Fail;
 
     /// <summary>
+    /// 错误码
+    /// </summary>
+    public Int32 ErrCode { get; set; }
+
+    /// <summary>
     /// 消息
     /// </summary>
     public string message { get; set; }

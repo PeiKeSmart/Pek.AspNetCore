@@ -22,7 +22,15 @@ public class DResult
     /// </summary>
     public Object? extdata { get; set; }
 
+    /// <summary>
+    /// 状态码
+    /// </summary>
     public Int32 code { get; set; }
+
+    /// <summary>
+    /// 错误码
+    /// </summary>
+    public Int32 errCode { get; set; }
 
     /// <summary>
     /// 网址路径

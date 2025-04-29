@@ -13,6 +13,11 @@ public class DHResult
     public StateCode Code { get; set; } = StateCode.Fail;
 
     /// <summary>
+    /// 错误码
+    /// </summary>
+    public Int32 ErrCode { get; set; }
+
+    /// <summary>
     /// 消息
     /// </summary>
     public string Message { get; set; }
