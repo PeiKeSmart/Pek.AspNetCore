@@ -89,7 +89,8 @@ public class DGResult : JsonResult
             OperationTime,
             Data,
             ExtData,
-            Id
+            Id,
+            ErrCode,
         };
         return base.ExecuteResultAsync(context);
     }
