@@ -21,9 +21,9 @@ public class PekSysSetting : Config<PekSysSetting>
     public Boolean AllowRequestParams { get; set; }
 
     /// <summary>
-    /// 允许获取请求和响应内容时排除的Url关键词，多个以逗号分隔
+    /// AllowRequestParams为true时，允许获取请求和响应内容时排除的Url关键词，多个以逗号分隔
     /// </summary>
-    [Description("允许获取请求和响应内容时排除的Url关键词，多个以逗号分隔")]
+    [Description("AllowRequestParams为true时，允许获取请求和响应内容时排除的Url关键词，多个以逗号分隔")]
     public String? ExcludeUrl { get; set; }
 
     /// <summary>
@@ -37,4 +37,10 @@ public class PekSysSetting : Config<PekSysSetting>
     /// </summary>
     [Description("在客户浏览器地址栏中启用博客 RSS feeds 链接")]
     public Boolean ShowHeaderRssUrl { get; set; }
+
+    /// <summary>
+    /// 是否启用表单数据净化，默认启用
+    /// </summary>
+    [Description("是否启用表单数据净化，默认启用")]
+    public Boolean AllowFormDataSanitize { get; set; }
 }

@@ -2,6 +2,8 @@
 
 using NewLife.Log;
 
+using Pek.Configs;
+
 namespace Pek.AspNetCore.WebMiddleware;
 
 /// <summary>
@@ -19,6 +21,12 @@ public class FormDataSanitizeMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        if (!PekSysSetting.Current.AllowFormDataSanitize)
+        {
+            // 继续处理请求
+            await _next(context).ConfigureAwait(false);
+        }
+
         var request = context.Request;
         
         // 只处理 POST 请求且 Content-Type 为表单类型的请求
