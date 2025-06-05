@@ -7,6 +7,16 @@ using Pek.Configs;
 namespace Pek.AspNetCore.WebMiddleware;
 
 /// <summary>
+/// 非法字符信息
+/// </summary>
+public class InvalidCharInfo
+{
+    public int Position { get; set; }
+    public char Character { get; set; }
+    public int CharCode { get; set; }
+}
+
+/// <summary>
 /// 表单数据净化中间件，用于过滤表单中的非法字符
 /// 在所有其他处理之前执行，确保在任何表单解析之前净化数据
 /// </summary>
@@ -21,10 +31,12 @@ public class FormDataSanitizeMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        // 检查配置开关，如果未启用则直接跳过
         if (!PekSysSetting.Current.AllowFormDataSanitize)
         {
             // 继续处理请求
             await _next(context).ConfigureAwait(false);
+            return;
         }
 
         var request = context.Request;
@@ -40,32 +52,108 @@ public class FormDataSanitizeMiddleware
                 // 启用缓冲以便可以多次读取请求体
                 request.EnableBuffering();
 
-                // 读取原始请求体
-                using var reader = new StreamReader(request.Body, Encoding.UTF8, leaveOpen: true);
-                var body = await reader.ReadToEndAsync().ConfigureAwait(false);
-
-                XTrace.Log.Info($"[FormDataSanitizeMiddleware] 原始请求体长度: {body.Length}, 路径: {request.Path}");
-
-                // 检查是否包含非法字符
-                if (ContainsInvalidCharacters(body))
+                // 使用字节级读取，避免字符编码问题
+                request.Body.Position = 0;
+                
+                byte[] bodyBytes;
+                using (var memoryStream = new MemoryStream())
                 {
-                    XTrace.Log.Warn($"[FormDataSanitizeMiddleware] 检测到非法字符，开始净化数据，路径: {request.Path}");
+                    await request.Body.CopyToAsync(memoryStream).ConfigureAwait(false);
+                    bodyBytes = memoryStream.ToArray();
+                }
+
+                XTrace.Log.Info($"[FormDataSanitizeMiddleware] 原始请求体字节长度: {bodyBytes.Length}, 路径: {request.Path}, ContentType: {request.ContentType}");
+                
+                // 输出原始字节的十六进制表示（前100字节）
+                if (bodyBytes.Length > 0)
+                {
+                    var previewLength = Math.Min(bodyBytes.Length, 100);
+                    var hexPreview = Convert.ToHexString(bodyBytes.Take(previewLength).ToArray());
+                    XTrace.Log.Info($"[FormDataSanitizeMiddleware] 原始字节预览(hex): {hexPreview}");
+                }
+
+                // 尝试安全地将字节转换为字符串，并检测非法字符
+                string body;
+                var hasEncodingIssues = false;
+                
+                try
+                {
+                    // 使用UTF-8解码，但允许替换无效字符
+                    var encoding = new UTF8Encoding(false, false); // 不抛出异常
+                    body = encoding.GetString(bodyBytes);
+                    
+                    // 检查是否有替换字符（通常表示编码问题）
+                    if (body.Contains('\uFFFD'))
+                    {
+                        hasEncodingIssues = true;
+                        XTrace.Log.Warn($"[FormDataSanitizeMiddleware] 检测到编码问题，存在替换字符");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    XTrace.Log.Error($"[FormDataSanitizeMiddleware] 字符串解码失败: {ex.Message}");
+                    hasEncodingIssues = true;
+                    
+                    // 强制使用Latin-1编码（保持字节不变）
+                    body = Encoding.GetEncoding("ISO-8859-1").GetString(bodyBytes);
+                }
+
+                XTrace.Log.Info($"[FormDataSanitizeMiddleware] 解码后字符串长度: {body.Length}");
+                
+                // 输出完整的原始数据（用于调试）
+                if (body.Length > 0 && body.Length <= 1000)
+                {
+                    XTrace.Log.Info($"[FormDataSanitizeMiddleware] 完整原始数据: {body}");
+                    
+                    // 输出每个问题字符的详细信息
+                    var charDetails = new StringBuilder();
+                    for (var i = 0; i < Math.Min(body.Length, 200); i++)
+                    {
+                        var c = body[i];
+                        if (c < 32 || c > 126 || c == '\uFFFD')
+                        {
+                            charDetails.Append($"[{i}]='\\u{((int)c):X4}' ");
+                        }
+                    }
+                    if (charDetails.Length > 0)
+                    {
+                        XTrace.Log.Warn($"[FormDataSanitizeMiddleware] 发现特殊字符: {charDetails}");
+                    }
+                }
+
+                // 增强的字符检测
+                var invalidChars = FindInvalidCharacters(body);
+                if (invalidChars.Count > 0 || hasEncodingIssues)
+                {
+                    XTrace.Log.Warn($"[FormDataSanitizeMiddleware] 检测到 {invalidChars.Count} 个非法字符或编码问题，开始净化数据，路径: {request.Path}");
+                    
+                    foreach (var invalidChar in invalidChars)
+                    {
+                        XTrace.Log.Info($"[FormDataSanitizeMiddleware] 非法字符详情: 位置={invalidChar.Position}, 字符=\\u{invalidChar.CharCode:X4}, ASCII={invalidChar.CharCode}");
+                    }
                     
                     // 净化数据
                     var sanitizedBody = SanitizeFormData(body);
 
                     XTrace.Log.Info($"[FormDataSanitizeMiddleware] 净化后请求体长度: {sanitizedBody.Length}");
+                    if (sanitizedBody.Length <= 1000)
+                    {
+                        XTrace.Log.Info($"[FormDataSanitizeMiddleware] 净化后数据: {sanitizedBody}");
+                    }
 
                     // 创建新的请求体流
                     var sanitizedBytes = Encoding.UTF8.GetBytes(sanitizedBody);
                     request.Body = new MemoryStream(sanitizedBytes);
                     request.ContentLength = sanitizedBytes.Length;
+                    
+                    XTrace.Log.Info($"[FormDataSanitizeMiddleware] 已替换请求体流，新长度: {request.ContentLength}");
                 }
                 else
                 {
                     // 如果没有非法字符，重置流位置
+                    request.Body = new MemoryStream(bodyBytes);
                     request.Body.Position = 0;
-                    XTrace.Log.Info($"[FormDataSanitizeMiddleware] 未检测到非法字符，路径: {request.Path}");
+                    XTrace.Log.Info($"[FormDataSanitizeMiddleware] 未检测到非法字符，路径: {request.Path}，重置流位置到0");
                 }
             }
             catch (Exception ex)
@@ -86,26 +174,38 @@ public class FormDataSanitizeMiddleware
     }
 
     /// <summary>
-    /// 检查字符串是否包含非法字符
+    /// 查找所有非法字符的详细信息
     /// </summary>
-    private static Boolean ContainsInvalidCharacters(String input)
+    private static List<InvalidCharInfo> FindInvalidCharacters(String input)
     {
+        var invalidChars = new List<InvalidCharInfo>();
+        
         if (String.IsNullOrEmpty(input))
-            return false;
+            return invalidChars;
 
-        // 检查常见的非法字符
         for (var i = 0; i < input.Length; i++)
         {
             var c = input[i];
-            // 检查空字符和其他控制字符
-            if (c == '\0' || (c >= '\u0001' && c <= '\u001F' && c != '\t' && c != '\n' && c != '\r'))
+            var charCode = (int)c;
+            
+            // 检测各种可能有问题的字符
+            if (c == '\0' || // 空字符
+                (charCode >= 1 && charCode <= 8) || // 控制字符 SOH-BS
+                (charCode >= 11 && charCode <= 12) || // VT, FF
+                (charCode >= 14 && charCode <= 31) || // SO-US
+                charCode == 127 || // DEL
+                (charCode >= 128 && charCode <= 159)) // C1 控制字符
             {
-                XTrace.Log.Warn($"[FormDataSanitizeMiddleware] 发现非法字符: \\u{((Int32)c):X4} 在位置 {i}");
-                return true;
+                invalidChars.Add(new InvalidCharInfo
+                {
+                    Position = i,
+                    Character = c,
+                    CharCode = charCode
+                });
             }
         }
         
-        return false;
+        return invalidChars;
     }
 
     /// <summary>
