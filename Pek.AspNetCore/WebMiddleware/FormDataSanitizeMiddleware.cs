@@ -181,68 +181,39 @@ public class FormDataSanitizeMiddleware
         if (String.IsNullOrEmpty(formData))
             return formData;
 
-        var result = new StringBuilder(formData.Length);
-        var removedCount = 0;
-        var replacedUrlEncodedCount = 0;
+        var removedUrlEncodedNulls = 0;
+        var removedDecodedNulls = 0;
         
-        // 首先处理URL编码的空字符 %00
+        // 只处理URL编码的空字符 %00
         var urlEncodedNullPattern = "%00";
         if (formData.Contains(urlEncodedNullPattern))
         {
             var originalLength = formData.Length;
             formData = formData.Replace(urlEncodedNullPattern, ""); // 直接移除URL编码的空字符
-            replacedUrlEncodedCount = (originalLength - formData.Length) / 3; // %00 是3个字符
-            XTrace.Log.Info($"[FormDataSanitizeMiddleware] 移除了 {replacedUrlEncodedCount} 个URL编码的空字符(%00)");
+            removedUrlEncodedNulls = (originalLength - formData.Length) / 3; // %00 是3个字符
+            XTrace.Log.Info($"[FormDataSanitizeMiddleware] 移除了 {removedUrlEncodedNulls} 个URL编码的空字符(%00)");
         }
         
-        // 处理其他URL编码的控制字符
-        for (var i = 1; i <= 31; i++)
+        // 只处理已解码字符串中的空字符 \0
+        if (formData.Contains('\0'))
         {
-            if (i == 9 || i == 10 || i == 13) continue; // 保留 \t \n \r
-            
-            var urlEncoded = $"%{i:X2}";
-            if (formData.Contains(urlEncoded))
-            {
-                var beforeLength = formData.Length;
-                formData = formData.Replace(urlEncoded, "");
-                var removedThisType = (beforeLength - formData.Length) / 3;
-                if (removedThisType > 0)
-                {
-                    XTrace.Log.Info($"[FormDataSanitizeMiddleware] 移除了 {removedThisType} 个URL编码的控制字符({urlEncoded})");
-                    replacedUrlEncodedCount += removedThisType;
-                }
-            }
-        }
-        
-        // 然后处理已解码字符串中的控制字符
-        for (var i = 0; i < formData.Length; i++)
-        {
-            var c = formData[i];
-            
-            // 保留正常字符：可打印字符、制表符、换行符、回车符
-            if (c >= 32 || c == '\t' || c == '\n' || c == '\r')
-            {
-                result.Append(c);
-            }
-            else
-            {
-                // 移除其他控制字符
-                removedCount++;
-                XTrace.Log.Info($"[FormDataSanitizeMiddleware] 移除已解码的控制字符: \\u{((int)c):X4} 在位置 {i}");
-            }
+            var originalLength = formData.Length;
+            formData = formData.Replace("\0", ""); // 移除空字符
+            removedDecodedNulls = originalLength - formData.Length;
+            XTrace.Log.Info($"[FormDataSanitizeMiddleware] 移除了 {removedDecodedNulls} 个已解码的空字符(\\0)");
         }
 
-        var totalRemoved = removedCount + replacedUrlEncodedCount;
+        var totalRemoved = removedUrlEncodedNulls + removedDecodedNulls;
         if (totalRemoved > 0)
         {
-            XTrace.Log.Info($"[FormDataSanitizeMiddleware] 总共移除了 {totalRemoved} 个非法字符 (URL编码: {replacedUrlEncodedCount}, 已解码: {removedCount})");
+            XTrace.Log.Info($"[FormDataSanitizeMiddleware] 总共移除了 {totalRemoved} 个空字符 (URL编码: {removedUrlEncodedNulls}, 已解码: {removedDecodedNulls})");
         }
 
-        return result.ToString();
+        return formData;
     }
 
     /// <summary>
-    /// 查找所有非法字符的详细信息（包括URL编码的检查）
+    /// 查找空字符的详细信息（只检查空字符）
     /// </summary>
     private static List<InvalidCharInfo> FindInvalidCharacters(String input)
     {
@@ -251,46 +222,34 @@ public class FormDataSanitizeMiddleware
         if (String.IsNullOrEmpty(input))
             return invalidChars;
 
-        // 首先检查URL编码的控制字符
-        for (var i = 0; i <= 31; i++)
+        // 只检查URL编码的空字符 %00
+        var urlEncodedNull = "%00";
+        var index = 0;
+        while ((index = input.IndexOf(urlEncodedNull, index, StringComparison.OrdinalIgnoreCase)) != -1)
         {
-            if (i == 9 || i == 10 || i == 13) continue; // 跳过允许的字符
-            
-            var urlEncoded = $"%{i:X2}";
-            var index = 0;
-            while ((index = input.IndexOf(urlEncoded, index, StringComparison.OrdinalIgnoreCase)) != -1)
+            invalidChars.Add(new InvalidCharInfo
             {
-                invalidChars.Add(new InvalidCharInfo
-                {
-                    Position = index,
-                    Character = (char)i,
-                    CharCode = i
-                });
-                XTrace.Log.Warn($"[FormDataSanitizeMiddleware] 发现URL编码的控制字符: {urlEncoded} (\\u{i:X4}) 在位置 {index}");
-                index += urlEncoded.Length;
-            }
+                Position = index,
+                Character = '\0',
+                CharCode = 0
+            });
+            XTrace.Log.Warn($"[FormDataSanitizeMiddleware] 发现URL编码的空字符: %00 在位置 {index}");
+            index += urlEncodedNull.Length;
         }
 
-        // 然后检查已解码的字符串中的控制字符
+        // 只检查已解码的空字符 \0
         for (var i = 0; i < input.Length; i++)
         {
             var c = input[i];
-            var charCode = (int)c;
-            
-            // 检测各种可能有问题的字符
-            if (c == '\0' || // 空字符
-                (charCode >= 1 && charCode <= 8) || // 控制字符 SOH-BS
-                (charCode >= 11 && charCode <= 12) || // VT, FF
-                (charCode >= 14 && charCode <= 31) || // SO-US
-                charCode == 127 || // DEL
-                (charCode >= 128 && charCode <= 159)) // C1 控制字符
+            if (c == '\0')
             {
                 invalidChars.Add(new InvalidCharInfo
                 {
                     Position = i,
                     Character = c,
-                    CharCode = charCode
+                    CharCode = 0
                 });
+                XTrace.Log.Warn($"[FormDataSanitizeMiddleware] 发现已解码的空字符: \\0 在位置 {i}");
             }
         }
         
