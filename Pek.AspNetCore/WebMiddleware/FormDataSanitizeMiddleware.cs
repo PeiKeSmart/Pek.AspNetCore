@@ -62,14 +62,14 @@ public class FormDataSanitizeMiddleware
                     bodyBytes = memoryStream.ToArray();
                 }
 
-                XTrace.Log.Info($"[FormDataSanitizeMiddleware] 原始请求体字节长度: {bodyBytes.Length}, 路径: {request.Path}, ContentType: {request.ContentType}");
+                // XTrace.Log.Info($"[FormDataSanitizeMiddleware] 原始请求体字节长度: {bodyBytes.Length}, 路径: {request.Path}, ContentType: {request.ContentType}");
                 
                 // 输出原始字节的十六进制表示（前100字节）
                 if (bodyBytes.Length > 0)
                 {
                     var previewLength = Math.Min(bodyBytes.Length, 100);
                     var hexPreview = Convert.ToHexString(bodyBytes.Take(previewLength).ToArray());
-                    XTrace.Log.Info($"[FormDataSanitizeMiddleware] 原始字节预览(hex): {hexPreview}");
+                    // XTrace.Log.Info($"[FormDataSanitizeMiddleware] 原始字节预览(hex): {hexPreview}");
                 }
 
                 // 尝试安全地将字节转换为字符串，并检测非法字符
@@ -98,7 +98,7 @@ public class FormDataSanitizeMiddleware
                     body = Encoding.GetEncoding("ISO-8859-1").GetString(bodyBytes);
                 }
 
-                XTrace.Log.Info($"[FormDataSanitizeMiddleware] 解码后字符串长度: {body.Length}");
+                //XTrace.Log.Info($"[FormDataSanitizeMiddleware] 解码后字符串长度: {body.Length}");
                 
                 // 输出完整的原始数据（用于调试）
                 if (body.Length > 0 && body.Length <= 1000)
@@ -174,7 +174,75 @@ public class FormDataSanitizeMiddleware
     }
 
     /// <summary>
-    /// 查找所有非法字符的详细信息
+    /// 净化表单数据，移除或替换非法字符
+    /// </summary>
+    private static String SanitizeFormData(String formData)
+    {
+        if (String.IsNullOrEmpty(formData))
+            return formData;
+
+        var result = new StringBuilder(formData.Length);
+        var removedCount = 0;
+        var replacedUrlEncodedCount = 0;
+        
+        // 首先处理URL编码的空字符 %00
+        var urlEncodedNullPattern = "%00";
+        if (formData.Contains(urlEncodedNullPattern))
+        {
+            var originalLength = formData.Length;
+            formData = formData.Replace(urlEncodedNullPattern, ""); // 直接移除URL编码的空字符
+            replacedUrlEncodedCount = (originalLength - formData.Length) / 3; // %00 是3个字符
+            XTrace.Log.Info($"[FormDataSanitizeMiddleware] 移除了 {replacedUrlEncodedCount} 个URL编码的空字符(%00)");
+        }
+        
+        // 处理其他URL编码的控制字符
+        for (var i = 1; i <= 31; i++)
+        {
+            if (i == 9 || i == 10 || i == 13) continue; // 保留 \t \n \r
+            
+            var urlEncoded = $"%{i:X2}";
+            if (formData.Contains(urlEncoded))
+            {
+                var beforeLength = formData.Length;
+                formData = formData.Replace(urlEncoded, "");
+                var removedThisType = (beforeLength - formData.Length) / 3;
+                if (removedThisType > 0)
+                {
+                    XTrace.Log.Info($"[FormDataSanitizeMiddleware] 移除了 {removedThisType} 个URL编码的控制字符({urlEncoded})");
+                    replacedUrlEncodedCount += removedThisType;
+                }
+            }
+        }
+        
+        // 然后处理已解码字符串中的控制字符
+        for (var i = 0; i < formData.Length; i++)
+        {
+            var c = formData[i];
+            
+            // 保留正常字符：可打印字符、制表符、换行符、回车符
+            if (c >= 32 || c == '\t' || c == '\n' || c == '\r')
+            {
+                result.Append(c);
+            }
+            else
+            {
+                // 移除其他控制字符
+                removedCount++;
+                XTrace.Log.Info($"[FormDataSanitizeMiddleware] 移除已解码的控制字符: \\u{((int)c):X4} 在位置 {i}");
+            }
+        }
+
+        var totalRemoved = removedCount + replacedUrlEncodedCount;
+        if (totalRemoved > 0)
+        {
+            XTrace.Log.Info($"[FormDataSanitizeMiddleware] 总共移除了 {totalRemoved} 个非法字符 (URL编码: {replacedUrlEncodedCount}, 已解码: {removedCount})");
+        }
+
+        return result.ToString();
+    }
+
+    /// <summary>
+    /// 查找所有非法字符的详细信息（包括URL编码的检查）
     /// </summary>
     private static List<InvalidCharInfo> FindInvalidCharacters(String input)
     {
@@ -183,6 +251,27 @@ public class FormDataSanitizeMiddleware
         if (String.IsNullOrEmpty(input))
             return invalidChars;
 
+        // 首先检查URL编码的控制字符
+        for (var i = 0; i <= 31; i++)
+        {
+            if (i == 9 || i == 10 || i == 13) continue; // 跳过允许的字符
+            
+            var urlEncoded = $"%{i:X2}";
+            var index = 0;
+            while ((index = input.IndexOf(urlEncoded, index, StringComparison.OrdinalIgnoreCase)) != -1)
+            {
+                invalidChars.Add(new InvalidCharInfo
+                {
+                    Position = index,
+                    Character = (char)i,
+                    CharCode = i
+                });
+                XTrace.Log.Warn($"[FormDataSanitizeMiddleware] 发现URL编码的控制字符: {urlEncoded} (\\u{i:X4}) 在位置 {index}");
+                index += urlEncoded.Length;
+            }
+        }
+
+        // 然后检查已解码的字符串中的控制字符
         for (var i = 0; i < input.Length; i++)
         {
             var c = input[i];
@@ -206,40 +295,6 @@ public class FormDataSanitizeMiddleware
         }
         
         return invalidChars;
-    }
-
-    /// <summary>
-    /// 净化表单数据，移除或替换非法字符
-    /// </summary>
-    private static String SanitizeFormData(String formData)
-    {
-        if (String.IsNullOrEmpty(formData))
-            return formData;
-
-        var result = new StringBuilder(formData.Length);
-        var removedCount = 0;
-        
-        for (var i = 0; i < formData.Length; i++)
-        {
-            var c = formData[i];
-            // 保留可打印字符、制表符、换行符、回车符
-            if (c >= 32 || c == '\t' || c == '\n' || c == '\r')
-            {
-                result.Append(c);
-            }
-            else
-            {
-                // 移除控制字符
-                removedCount++;
-            }
-        }
-
-        if (removedCount > 0)
-        {
-            XTrace.Log.Info($"[FormDataSanitizeMiddleware] 移除了 {removedCount} 个非法字符");
-        }
-
-        return result.ToString();
     }
 }
 
