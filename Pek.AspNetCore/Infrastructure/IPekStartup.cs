@@ -17,7 +17,8 @@ public interface IPekStartup: IDHStartup
     /// 配置添加的中间件的使用
     /// </summary>
     /// <param name="application">用于配置应用程序的请求管道的生成器</param>
-    void Configure(IApplicationBuilder application);
+    /// <param name="webHostEnvironment"></param>
+    void Configure(IApplicationBuilder application, IWebHostEnvironment webHostEnvironment);
 
     /// <summary>
     /// 注册路由
