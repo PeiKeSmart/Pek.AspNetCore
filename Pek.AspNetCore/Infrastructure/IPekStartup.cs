@@ -11,14 +11,13 @@ public interface IPekStartup: IDHStartup
     /// <param name="services">服务描述符集合</param>
     /// <param name="configuration">应用程序的配置</param>
     /// <param name="webHostEnvironment"></param>
-    void ConfigureServices(IServiceCollection services, IConfiguration configuration, IWebHostEnvironment? webHostEnvironment = null);
+    void ConfigureServices(IServiceCollection services, IConfiguration configuration, IWebHostEnvironment webHostEnvironment);
 
     /// <summary>
     /// 配置添加的中间件的使用
     /// </summary>
     /// <param name="application">用于配置应用程序的请求管道的生成器</param>
-    /// <param name="webHostEnvironment"></param>
-    void Configure(IApplicationBuilder application, IWebHostEnvironment? webHostEnvironment = null);
+    void Configure(IApplicationBuilder application);
 
     /// <summary>
     /// 注册路由
