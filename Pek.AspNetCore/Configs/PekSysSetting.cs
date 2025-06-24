@@ -18,7 +18,7 @@ public class PekSysSetting : Config<PekSysSetting>
     /// 是否允许获取请求和响应内容
     /// </summary>
     [Description("是否允许获取请求和响应内容")]
-    public Boolean AllowRequestParams { get; set; }
+    public Boolean AllowRequestParams { get; set; } = true;
 
     /// <summary>
     /// AllowRequestParams为true时，允许获取请求和响应内容时排除的Url关键词，多个以逗号分隔
