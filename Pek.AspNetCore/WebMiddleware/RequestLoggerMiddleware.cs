@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.IO.Compression;
+using System.Text;
 
 using NewLife;
 using NewLife.Collections;
@@ -216,7 +217,43 @@ public class RequestLoggerMiddleware(
         }
         else
         {
-            var responseBody = await new StreamReader(responseBodyStream).ReadToEndAsync().ConfigureAwait(false);
+            var buffer = responseBodyStream.ToArray();
+            var responseBody = String.Empty;
+            
+            // 检查是否有压缩编码
+            if (context.Response.Headers.ContainsKey("Content-Encoding"))
+            {
+                var encoding = context.Response.Headers["Content-Encoding"].ToString().ToLowerInvariant();
+                
+                try
+                {
+                    using var compressedStream = new MemoryStream(buffer);
+                    Stream decompressedStream = encoding switch
+                    {
+                        "gzip" => new GZipStream(compressedStream, CompressionMode.Decompress),
+                        "deflate" => new DeflateStream(compressedStream, CompressionMode.Decompress),
+                        "br" => new BrotliStream(compressedStream, CompressionMode.Decompress),
+                        _ => compressedStream
+                    };
+                    
+                    using (decompressedStream)
+                    using (var reader = new StreamReader(decompressedStream, Encoding.UTF8))
+                    {
+                        responseBody = await reader.ReadToEndAsync().ConfigureAwait(false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 如果解压缩失败，记录原始数据
+                    responseBody = $"[解压缩失败: {ex.Message}] 原始数据长度: {buffer.Length} bytes";
+                }
+            }
+            else
+            {
+                // 没有压缩，直接读取
+                responseBody = Encoding.UTF8.GetString(buffer);
+            }
+            
             api.ResponseBody = responseBody;
         }
 

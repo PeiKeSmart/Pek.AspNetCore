@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>Pek</RootNamespace>
     <AssemblyTitle>AspNetCore基类</AssemblyTitle>
@@ -51,7 +51,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pek.Common" Version="4.12.2025.623-beta1318" />
+    <PackageReference Include="Pek.Common" Version="4.12.2025.710-beta0430" />
   </ItemGroup>
 
   <ItemGroup>
@@ -66,7 +66,7 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson">
-      <Version>9.0.6</Version>
+      <Version>9.0.7</Version>
     </PackageReference>
   </ItemGroup>
 
