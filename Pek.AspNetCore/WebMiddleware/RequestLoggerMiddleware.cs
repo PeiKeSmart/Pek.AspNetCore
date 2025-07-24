@@ -187,9 +187,49 @@ public class RequestLoggerMiddleware(
 
             if (request.ContentLength > 0 && request.ContentType != null)
             {
-                using var reader = new StreamReader(request.Body, Encoding.UTF8, leaveOpen: true);
-                requestBody = await reader.ReadToEndAsync().ConfigureAwait(false);
-                context.Request.Body.Position = 0;
+                // 处理文件上传请求 - multipart/form-data
+                if (request.ContentType.Contains("multipart/form-data", StringComparison.OrdinalIgnoreCase) && request.HasFormContentType)
+                {
+                    try
+                    {
+                        var form = await request.ReadFormAsync().ConfigureAwait(false);
+                        var formSummary = Pool.StringBuilder.Get();
+                        
+                        // 记录普通表单字段
+                        foreach (var field in form)
+                        {
+                            if (field.Value.Count > 0)
+                            {
+                                formSummary.Append($"{field.Key}={String.Join(",", field.Value)};");
+                            }
+                        }
+                        
+                        // 记录文件信息（不记录文件内容）
+                        if (form.Files.Count > 0)
+                        {
+                            formSummary.Append($"Files=[");
+                            for (var i = 0; i < form.Files.Count; i++)
+                            {
+                                var file = form.Files[i];
+                                if (i > 0) formSummary.Append(",");
+                                formSummary.Append($"{{Name:{file.Name},FileName:{file.FileName},Size:{file.Length},ContentType:{file.ContentType}}}");
+                            }
+                            formSummary.Append("];");
+                        }
+                        
+                        requestBody = formSummary.Return(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        requestBody = $"[解析表单失败: {ex.Message}]";
+                    }
+                }
+                else
+                {
+                    using var reader = new StreamReader(request.Body, Encoding.UTF8, leaveOpen: true);
+                    requestBody = await reader.ReadToEndAsync().ConfigureAwait(false);
+                    context.Request.Body.Position = 0;
+                }
             }
 
             api.Body = requestBody;
