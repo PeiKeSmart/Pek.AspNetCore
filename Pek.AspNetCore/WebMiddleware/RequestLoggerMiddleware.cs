@@ -200,7 +200,7 @@ public class RequestLoggerMiddleware(
                         {
                             if (field.Value.Count > 0)
                             {
-                                formSummary.Append($"{field.Key}={String.Join(",", field.Value)};");
+                                formSummary.Append($"{field.Key}={field.Value.Join(",")};");
                             }
                         }
                         
