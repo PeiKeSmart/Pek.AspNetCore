@@ -7,9 +7,11 @@ using Pek.Helpers;
 namespace Pek.Models;
 
 /// <summary>
-/// 专用返回
+/// 专用返回（泛型版本）
 /// </summary>
-public class DGResult : JsonResult
+/// <typeparam name="T1">Data 的类型</typeparam>
+/// <typeparam name="T2">ExtData 的类型</typeparam>
+public class DGResult<T1, T2> : JsonResult
 {
     /// <summary>
     /// 状态码
@@ -29,12 +31,12 @@ public class DGResult : JsonResult
     /// <summary>
     /// 数据
     /// </summary>
-    public dynamic? Data { get; set; }
+    public T1? Data { get; set; }
 
     /// <summary>
     /// 其他数据
     /// </summary>
-    public dynamic? ExtData { get; set; }
+    public T2? ExtData { get; set; }
 
     /// <summary>
     /// 操作时间
@@ -62,7 +64,7 @@ public class DGResult : JsonResult
     /// <param name="message">消息</param>
     /// <param name="data">数据</param>
     /// <param name="extdata">其他数据</param>
-    public DGResult(StateCode code, String message, dynamic? data = null, dynamic? extdata = null) : base(null)
+    public DGResult(StateCode code, String message, T1? data = default, T2? extdata = default) : base(null)
     {
         Code = code;
         Message = message;
@@ -94,5 +96,47 @@ public class DGResult : JsonResult
         };
         return base.ExecuteResultAsync(context);
     }
+}
 
+/// <summary>
+/// 专用返回（单泛型版本）
+/// </summary>
+/// <typeparam name="T">Data 的类型</typeparam>
+public class DGResult<T> : DGResult<T, Object?>
+{
+    /// <summary>
+    /// 初始化返回结果
+    /// </summary>
+    public DGResult() : base() { }
+
+    /// <summary>
+    /// 初始化返回结果
+    /// </summary>
+    /// <param name="code">状态码</param>
+    /// <param name="message">消息</param>
+    /// <param name="data">数据</param>
+    /// <param name="extdata">其他数据</param>
+    public DGResult(StateCode code, String message, T? data = default, Object? extdata = null) 
+        : base(code, message, data, extdata) { }
+}
+
+/// <summary>
+/// 专用返回（非泛型版本，向后兼容）
+/// </summary>
+public class DGResult : DGResult<Object?, Object?>
+{
+    /// <summary>
+    /// 初始化返回结果
+    /// </summary>
+    public DGResult() : base() { }
+
+    /// <summary>
+    /// 初始化返回结果
+    /// </summary>
+    /// <param name="code">状态码</param>
+    /// <param name="message">消息</param>
+    /// <param name="data">数据</param>
+    /// <param name="extdata">其他数据</param>
+    public DGResult(StateCode code, String message, Object? data = null, Object? extdata = null) 
+        : base(code, message, data, extdata) { }
 }
