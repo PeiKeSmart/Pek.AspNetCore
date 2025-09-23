@@ -12,7 +12,7 @@ public static class CookiesExtensions
 
 public class SmartCookies : IDictionary<string, string>
 {
-    public HttpContext httpContext { get; }
+    public HttpContext? httpContext { get; }
 
     public SmartCookies(IHttpContextAccessor accessor)
     {
@@ -30,7 +30,7 @@ public class SmartCookies : IDictionary<string, string>
         set
         {
             var time = DateTime.Now.AddSeconds(expires);
-            httpContext.Response.Cookies.Append(key, value, new CookieOptions { Expires = time });
+            httpContext?.Response.Cookies.Append(key, value, new CookieOptions { Expires = time });
         }
     }
 
