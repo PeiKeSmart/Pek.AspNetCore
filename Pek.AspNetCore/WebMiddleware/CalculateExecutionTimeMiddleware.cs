@@ -3,6 +3,7 @@
 using NewLife.Log;
 
 using Pek.Configs;
+using Pek.Helpers;
 using Pek.Webs;
 
 namespace Pek.WebMiddleware;
@@ -61,6 +62,8 @@ public class CalculateExecutionTimeMiddleware {
 
         var stopwatch = Stopwatch.StartNew(); // 启动计时器
 
+        var ip = DHWeb.GetUserHost(ctx);
+
         try
         {
             await _next.Invoke(ctx).ConfigureAwait(false); // 调用下一个中间件
@@ -71,7 +74,7 @@ public class CalculateExecutionTimeMiddleware {
             var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
 
             // 记录请求耗时
-            XTrace.WriteLine($"[CalculateExecutionTimeMiddleware.Invoke]请求{ctx.Request.Path}耗时{elapsedMilliseconds}ms");
+            XTrace.WriteLine($"[CalculateExecutionTimeMiddleware.Invoke][{ip}]请求{ctx.Request.Path}耗时{elapsedMilliseconds}ms-{DHWeb.UserAgent}");
         }
     }
 
