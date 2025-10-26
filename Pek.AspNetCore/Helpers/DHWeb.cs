@@ -467,14 +467,30 @@ public static partial class DHWeb
         return String.Empty;
     }
 
+    /// <summary>
+    /// 缓存键：用户主机
+    /// </summary>
+    private const String UserHostCacheKey = "DHWeb_UserHost_Cache_Key";
+
     /// <summary>获取用户主机</summary>
     /// <param name="context"></param>
     /// <returns></returns>
     public static String? GetUserHost(Microsoft.AspNetCore.Http.HttpContext context)
     {
-        var request = context.Request;
+        if (context == null)
+        {
+            return null;
+        }
 
+        // 检查当前请求生命周期内是否已缓存
+        if (context.Items.TryGetValue(UserHostCacheKey, out var cachedValue))
+        {
+            return cachedValue as String;
+        }
+
+        var request = context.Request;
         var str = "";
+        
         if (str.IsNullOrEmpty()) str = request.Headers["X-Remote-Ip"];
         if (str.IsNullOrEmpty()) str = request.Headers["HTTP_X_FORWARDED_FOR"];
         if (str.IsNullOrEmpty()) str = request.Headers["X-Real-IP"];
@@ -491,6 +507,9 @@ public static partial class DHWeb
             }
         }
 
+        // 将获取的值存储到当前请求的生命周期中
+        context.Items[UserHostCacheKey] = str;
+        
         return str;
     }
 
