@@ -836,7 +836,26 @@ public static partial class DHWeb
     /// <summary>
     /// 用户代理
     /// </summary>
-    public static String? UserAgent => Request?.Headers.UserAgent;
+    public static String? UserAgent
+    {
+        get
+        {
+            const string key = "cached_user_agent";
+            var context = Pek.Webs.HttpContext.Current;
+            if (context?.Items.ContainsKey(key) == true)
+            {
+                return context.Items[key] as string;
+            }
+            
+            var userAgent = context?.Request?.Headers.UserAgent;
+            if (context != null)
+            {
+                context.Items[key] = userAgent;
+            }
+            
+            return userAgent;
+        }
+    }
 
     #endregion
 
