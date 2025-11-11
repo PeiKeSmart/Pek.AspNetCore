@@ -106,6 +106,8 @@ public static class HttpRequestExtensions
 
     /// <summary>
     /// 是否Json内容类型
+    /// </summary>
+    /// <param name="request">Http请求</param>
     public static Boolean IsJsonContentType(this HttpRequest request)
     {
         ArgumentNullException.ThrowIfNull(request, nameof(request));
@@ -164,7 +166,7 @@ public static class HttpRequestExtensions
     /// 用户代理
     /// </summary>
     /// <param name="request">Http请求</param>
-    public static String? UserAgent(this HttpRequest request) => request.Headers["User-Agent"];
+    public static String? UserAgent(this HttpRequest request) => Helpers.DHWeb.UserAgent;
 
     #endregion
 

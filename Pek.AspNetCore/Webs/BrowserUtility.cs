@@ -12,13 +12,8 @@ public static class BrowserUtility
     /// <returns></returns>
     public static String? GetUserAgent(HttpRequest? httpRequest)
     {
-        String? userAgent = null;
-        var userAgentHeader = httpRequest?.Headers.UserAgent;
-        if (userAgentHeader?.Count > 0)
-        {
-            userAgent = userAgentHeader?[0]; //.ToUpper();
-        }
-        return userAgent;
+        // 优先使用 DHWeb.UserAgent (带缓存)，如果为空则回退到直接获取
+        return Helpers.DHWeb.UserAgent ?? httpRequest?.Headers.UserAgent;
     }
 
     /// <summary>

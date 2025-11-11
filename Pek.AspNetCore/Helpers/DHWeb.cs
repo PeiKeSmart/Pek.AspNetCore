@@ -827,7 +827,7 @@ public static partial class DHWeb
     /// <returns></returns>
     public static AgentType UserAgentType(this HttpRequest request)
     {
-        var userAgent = request.Headers.UserAgent;
+        var userAgent = UserAgent; // 使用缓存的 UserAgent
         switch (userAgent)
         {
             case String android when android.Contains("MicroMessenger"):
