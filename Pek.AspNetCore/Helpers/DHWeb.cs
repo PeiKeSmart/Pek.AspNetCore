@@ -475,7 +475,7 @@ public static partial class DHWeb
     /// <summary>获取用户主机</summary>
     /// <param name="context"></param>
     /// <returns></returns>
-    public static String? GetUserHost(Microsoft.AspNetCore.Http.HttpContext context)
+    public static String? GetUserHost(HttpContext context)
     {
         if (context == null)
         {
@@ -485,7 +485,7 @@ public static partial class DHWeb
         // 检查当前请求生命周期内是否已缓存
         if (context.Items.TryGetValue(UserHostCacheKey, out var cachedValue))
         {
-            return cachedValue as String;
+            return cachedValue.SafeString();
         }
 
         var request = context.Request;
@@ -863,7 +863,7 @@ public static partial class DHWeb
             var context = Pek.Webs.HttpContext.Current;
             if (context?.Items.ContainsKey(key) == true)
             {
-                return context.Items[key] as string;
+                return context.Items[key].SafeString();
             }
             
             var userAgent = context?.Request?.Headers.UserAgent;
