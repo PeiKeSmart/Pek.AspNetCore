@@ -35,22 +35,27 @@ public static class RequestHelper
         return !entityBody.TryGetValue(key, out var v) ? null : v?.ToString();
     }
 
-    /// <summary>
-    /// 确定指定的HTTP请求是否是Ajax请求
-    /// </summary>
+    /// <summary>确定指定的HTTP请求是否是由前端脚本(JS)发起的Ajax/接口请求</summary>
     /// <param name="request"></param>
     /// <returns></returns>
     public static Boolean IsAjaxRequest(this HttpRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        // 1. 标准 Ajax 约定头（例如 jQuery 会自动添加）
         if (request.Headers != null && request.Headers.XRequestedWith == "XMLHttpRequest") return true;
-        if (request.ContentType.EqualIgnoreCase("application/json")) return true;
 
-        if (request.Headers?.Accept.Any(e => e?.Split(',').Any(a => a.Trim() == "application/json") == true) == true) return true;
+        // 2. 自定义 JS 请求标记头：建议前端统一在 fetch/axios 中添加
+        //    headers: { "X-Pek-Request": "ajax" }
+        if (request.Headers != null &&
+            request.Headers.TryGetValue("X-Pek-Request", out var pekFlag) &&
+            String.Equals(pekFlag.ToString(), "ajax", StringComparison.OrdinalIgnoreCase))
+            return true;
 
+        // 3. 历史兼容：通过 output=json 明确声明希望以接口/JSON 方式处理
         if (request.GetRequestValue("output").EqualIgnoreCase("json")) return true;
 
+        // 其余情况统一视为常规非 JS 请求（包括普通表单提交）
         return false;
     }
 
