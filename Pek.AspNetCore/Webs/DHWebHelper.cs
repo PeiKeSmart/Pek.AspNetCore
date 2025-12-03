@@ -281,6 +281,9 @@ public static class DHWebHelper
     {
         if (url.IsNullOrEmpty()) return null;
 
+        // 先解码，处理 %2f 等编码字符
+        url = HttpUtility.UrlDecode(url);
+
         if (url.StartsWith("~/")) url = "/" + url[2..];
 
         // 绝对路径
