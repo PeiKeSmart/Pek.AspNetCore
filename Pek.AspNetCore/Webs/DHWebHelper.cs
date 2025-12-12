@@ -402,7 +402,7 @@ public static class DHWebHelper
             };
 
             // https时，SameSite使用None，此时可以让cookie写入有最好的兼容性，跨域也可以读取
-            if (ctx.Request.GetRawUrl().Scheme.EqualIgnoreCase("https"))
+            if (ctx.Request.IsHttps)
             {
                 //var domain = CubeSetting.Current.CookieDomain;
                 //if (!domain.IsNullOrEmpty())
@@ -419,7 +419,9 @@ public static class DHWebHelper
                 ctx.Response.Cookies.Append("CubeDeviceId", id, option);
             }
             else
+            {
                 ctx.Response.Cookies.Append("CubeDeviceId0", id, option);
+            }
 
             ss?.SetString("CubeDeviceId", id);
         }
