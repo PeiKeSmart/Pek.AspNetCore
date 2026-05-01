@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Buffers;
+using System.Text;
 
 using NewLife;
 using NewLife.Log;
@@ -15,18 +16,19 @@ public class FormDataSanitizeMiddleware
 {
     private readonly RequestDelegate _next;
     
-    // 缓存常用的字符串和编码对象，避免重复创建
-    private static readonly UTF8Encoding SafeUtf8Encoding = new(false, false);
     private static readonly Encoding Latin1Encoding = Encoding.GetEncoding("ISO-8859-1");
     
-    // 预编译的Content-Type检查
     private const String FormUrlEncodedType = "application/x-www-form-urlencoded";
     private const String MultipartFormDataType = "multipart/form-data";
+    private const Int32 ScanBufferSize = 4096;
+    private const Int32 MultipartHeaderPreviewLength = 8192;
     
-    // 文件上传检测的常量
     private const String ContentDispositionHeader = "Content-Disposition:";
     private const String ContentTypeHeader = "Content-Type:";
     private const String FilenameParameter = "filename=";
+    private const Byte NullByte = 0;
+    private const Byte PercentByte = (Byte)'%';
+    private const Byte ZeroByte = (Byte)'0';
 
     public FormDataSanitizeMiddleware(RequestDelegate next)
     {
@@ -72,10 +74,14 @@ public class FormDataSanitizeMiddleware
     /// </summary>
     private static Boolean IsFormDataRequest(HttpRequest request)
     {
-        return request.Method == HttpMethods.Post &&
-               !request.ContentType.IsNullOrWhiteSpace() &&
-               (request.ContentType.Contains(FormUrlEncodedType, StringComparison.OrdinalIgnoreCase) ||
-                request.ContentType.Contains(MultipartFormDataType, StringComparison.OrdinalIgnoreCase));
+        if (!HttpMethods.IsPost(request.Method) || !request.HasFormContentType)
+            return false;
+
+        var contentType = request.ContentType;
+
+        return !contentType.IsNullOrWhiteSpace() &&
+               (contentType.Contains(FormUrlEncodedType, StringComparison.OrdinalIgnoreCase) ||
+                contentType.Contains(MultipartFormDataType, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -83,128 +89,304 @@ public class FormDataSanitizeMiddleware
     /// </summary>
     private async Task ProcessFormDataRequest(HttpRequest request)
     {
-        // 启用缓冲以便可以多次读取请求体
         request.EnableBuffering();
-        
-        var bodyBytes = await ReadRequestBodyAsync(request).ConfigureAwait(false);
-        
-        if (bodyBytes.Length == 0)
-        {
-            return; // 空请求体，无需处理
-        }
 
         var contentType = request.ContentType!;
         
         if (contentType.Contains(FormUrlEncodedType, StringComparison.OrdinalIgnoreCase))
         {
-            await ProcessUrlEncodedData(request, bodyBytes).ConfigureAwait(false);
+            await ProcessUrlEncodedData(request).ConfigureAwait(false);
         }
         else if (contentType.Contains(MultipartFormDataType, StringComparison.OrdinalIgnoreCase))
         {
-            await ProcessMultipartData(request, bodyBytes).ConfigureAwait(false);
+            await ProcessMultipartData(request).ConfigureAwait(false);
         }
-    }
-
-    /// <summary>
-    /// 读取请求体字节数据
-    /// </summary>
-    private static async Task<Byte[]> ReadRequestBodyAsync(HttpRequest request)
-    {
-        request.Body.Position = 0;
-        
-        using var memoryStream = new MemoryStream();
-        await request.Body.CopyToAsync(memoryStream).ConfigureAwait(false);
-        return memoryStream.ToArray();
     }
 
     /// <summary>
     /// 处理 URL 编码的表单数据
     /// </summary>
-    private async Task ProcessUrlEncodedData(HttpRequest request, Byte[] bodyBytes)
+    private async Task ProcessUrlEncodedData(HttpRequest request)
     {
-        var body = DecodeBodySafely(bodyBytes, request.Path);
-        
-        if (ContainsNullCharacters(body))
+        if (!await ContainsNullMarkersAsync(request).ConfigureAwait(false))
         {
-            XTrace.Log.Warn($"[FormDataSanitizeMiddleware] 检测到空字符，开始净化数据，路径: {request.Path}");
-            
-            var sanitizedBody = SanitizeFormData(body);
-            await ReplaceRequestBody(request, sanitizedBody).ConfigureAwait(false);
-            
+            request.Body.Position = 0;
+            return;
+        }
+        
+        XTrace.Log.Warn($"[FormDataSanitizeMiddleware] 检测到空字符，开始净化数据，路径: {request.Path}");
+
+        var totalRemoved = await SanitizeUrlEncodedBodyAsync(request).ConfigureAwait(false);
+        if (totalRemoved > 0)
+        {
             XTrace.Log.Info($"[FormDataSanitizeMiddleware] 成功净化空字符，路径: {request.Path}");
         }
         else
         {
-            // 重置流位置，无需创建新流
-            ResetRequestBody(request, bodyBytes);
+            request.Body.Position = 0;
         }
     }
 
     /// <summary>
     /// 处理 multipart 表单数据
     /// </summary>
-    private async Task ProcessMultipartData(HttpRequest request, Byte[] bodyBytes)
+    private async Task ProcessMultipartData(HttpRequest request)
     {
-        // 只分析前几KB来检测文件上传，避免处理整个大文件
-        var analysisLength = Math.Min(bodyBytes.Length, 8192); // 分析前8KB
-        var analysisBytes = bodyBytes.AsSpan(0, analysisLength);
-        var analysisText = SafeUtf8Encoding.GetString(analysisBytes);
-
-        if (ContainsFileUpload(analysisText))
+        if (await ContainsFileUploadAsync(request).ConfigureAwait(false))
         {
             XTrace.Log.Debug($"[FormDataSanitizeMiddleware] 检测到文件上传，跳过净化处理，路径: {request.Path}");
-            ResetRequestBody(request, bodyBytes);
+            request.Body.Position = 0;
             return;
         }
 
-        // 没有文件上传，检查是否需要净化
-        var fullBody = DecodeBodySafely(bodyBytes, request.Path);
-        
-        if (ContainsNullCharacters(fullBody))
+        if (!await ContainsNullMarkersAsync(request).ConfigureAwait(false))
         {
-            XTrace.Log.Warn($"[FormDataSanitizeMiddleware] multipart表单检测到空字符，开始净化数据，路径: {request.Path}");
-            
-            var sanitizedBody = SanitizeFormData(fullBody);
-            await ReplaceRequestBody(request, sanitizedBody).ConfigureAwait(false);
-            
+            request.Body.Position = 0;
+            return;
+        }
+
+        XTrace.Log.Warn($"[FormDataSanitizeMiddleware] multipart表单检测到空字符，开始净化数据，路径: {request.Path}");
+
+        var totalRemoved = await SanitizeMultipartFormAsync(request).ConfigureAwait(false);
+        request.Body.Position = 0;
+        if (totalRemoved > 0)
+        {
             XTrace.Log.Info($"[FormDataSanitizeMiddleware] 成功净化multipart表单空字符，路径: {request.Path}");
         }
-        else
-        {
-            ResetRequestBody(request, bodyBytes);
-        }
     }
 
     /// <summary>
-    /// 安全解码请求体字节数据
+    /// 按字节流扫描是否包含空字符或 URL 编码的空字符
     /// </summary>
-    private static String DecodeBodySafely(Byte[] bodyBytes, PathString requestPath)
+    private static async Task<Boolean> ContainsNullMarkersAsync(HttpRequest request)
     {
+        request.Body.Position = 0;
+
+        var buffer = ArrayPool<Byte>.Shared.Rent(ScanBufferSize);
         try
         {
-            return SafeUtf8Encoding.GetString(bodyBytes);
+            var previous2 = Byte.MinValue;
+            var previous1 = Byte.MinValue;
+
+            while (true)
+            {
+                var bytesRead = await request.Body.ReadAsync(buffer.AsMemory(0, ScanBufferSize)).ConfigureAwait(false);
+                if (bytesRead <= 0)
+                    return false;
+
+                for (var index = 0; index < bytesRead; index++)
+                {
+                    var value = buffer[index];
+                    if (value == NullByte)
+                        return true;
+
+                    if (previous2 == PercentByte && previous1 == ZeroByte && value == ZeroByte)
+                        return true;
+
+                    previous2 = previous1;
+                    previous1 = value;
+                }
+            }
         }
-        catch (Exception ex)
+        finally
         {
-            XTrace.Log.Error($"[FormDataSanitizeMiddleware] UTF-8解码失败: {ex.Message}, 路径: {requestPath}");
-            return Latin1Encoding.GetString(bodyBytes);
+            ArrayPool<Byte>.Shared.Return(buffer);
         }
     }
 
     /// <summary>
-    /// 重置请求体流
+    /// 净化 URL 编码请求体，仅移除 0x00 和 %00
     /// </summary>
-    private static void ResetRequestBody(HttpRequest request, Byte[] bodyBytes) => request.Body = new MemoryStream(bodyBytes) { Position = 0 };
+    private static async Task<Int32> SanitizeUrlEncodedBodyAsync(HttpRequest request)
+    {
+        request.Body.Position = 0;
+
+        var capacity = request.ContentLength is > 0 and <= Int32.MaxValue ? (Int32)request.ContentLength.Value : 0;
+        var sanitizedStream = capacity > 0 ? new MemoryStream(capacity) : new MemoryStream();
+        var buffer = ArrayPool<Byte>.Shared.Rent(ScanBufferSize);
+        var totalRemoved = 0;
+        var state = 0;
+
+        try
+        {
+            while (true)
+            {
+                var bytesRead = await request.Body.ReadAsync(buffer.AsMemory(0, ScanBufferSize)).ConfigureAwait(false);
+                if (bytesRead <= 0)
+                    break;
+
+                for (var index = 0; index < bytesRead; index++)
+                {
+                    var value = buffer[index];
+                    switch (state)
+                    {
+                        case 0:
+                            if (value == PercentByte)
+                                state = 1;
+                            else if (value == NullByte)
+                                totalRemoved++;
+                            else
+                                sanitizedStream.WriteByte(value);
+                            break;
+                        case 1:
+                            if (value == ZeroByte)
+                            {
+                                state = 2;
+                            }
+                            else
+                            {
+                                sanitizedStream.WriteByte(PercentByte);
+                                if (value == PercentByte)
+                                    state = 1;
+                                else if (value == NullByte)
+                                {
+                                    totalRemoved++;
+                                    state = 0;
+                                }
+                                else
+                                {
+                                    sanitizedStream.WriteByte(value);
+                                    state = 0;
+                                }
+                            }
+                            break;
+                        default:
+                            if (value == ZeroByte)
+                            {
+                                totalRemoved++;
+                                state = 0;
+                            }
+                            else
+                            {
+                                sanitizedStream.WriteByte(PercentByte);
+                                sanitizedStream.WriteByte(ZeroByte);
+                                if (value == PercentByte)
+                                    state = 1;
+                                else if (value == NullByte)
+                                {
+                                    totalRemoved++;
+                                    state = 0;
+                                }
+                                else
+                                {
+                                    sanitizedStream.WriteByte(value);
+                                    state = 0;
+                                }
+                            }
+                            break;
+                    }
+                }
+            }
+
+            if (state == 1)
+            {
+                sanitizedStream.WriteByte(PercentByte);
+            }
+            else if (state == 2)
+            {
+                sanitizedStream.WriteByte(PercentByte);
+                sanitizedStream.WriteByte(ZeroByte);
+            }
+
+            sanitizedStream.Position = 0;
+            request.Body = sanitizedStream;
+            request.ContentLength = sanitizedStream.Length;
+
+            if (totalRemoved > 0)
+                XTrace.Log.Info($"[FormDataSanitizeMiddleware] 移除了 {totalRemoved} 个空字符");
+
+            return totalRemoved;
+        }
+        catch
+        {
+            sanitizedStream.Dispose();
+            throw;
+        }
+        finally
+        {
+            ArrayPool<Byte>.Shared.Return(buffer);
+        }
+    }
 
     /// <summary>
-    /// 替换请求体内容
+    /// 检测 multipart 请求前部是否包含文件上传特征
     /// </summary>
-    private static async Task ReplaceRequestBody(HttpRequest request, String newBody)
+    private static async Task<Boolean> ContainsFileUploadAsync(HttpRequest request)
     {
-        var sanitizedBytes = Encoding.UTF8.GetBytes(newBody);
-        request.Body = new MemoryStream(sanitizedBytes);
-        request.ContentLength = sanitizedBytes.Length;
-        await Task.CompletedTask.ConfigureAwait(false); // 保持异步签名一致性
+        request.Body.Position = 0;
+
+        var buffer = ArrayPool<Byte>.Shared.Rent(MultipartHeaderPreviewLength);
+        try
+        {
+            var bytesRead = await request.Body.ReadAsync(buffer.AsMemory(0, MultipartHeaderPreviewLength)).ConfigureAwait(false);
+            if (bytesRead <= 0)
+                return false;
+
+            var previewText = Latin1Encoding.GetString(buffer, 0, bytesRead);
+            return ContainsFileUpload(previewText.AsSpan());
+        }
+        finally
+        {
+            ArrayPool<Byte>.Shared.Return(buffer);
+        }
+    }
+
+    /// <summary>
+    /// 净化 multipart 文本字段，文件部分保持原样
+    /// </summary>
+    private static async Task<Int32> SanitizeMultipartFormAsync(HttpRequest request)
+    {
+        request.Body.Position = 0;
+        var form = await request.ReadFormAsync().ConfigureAwait(false);
+
+        var sanitizedFields = new Dictionary<String, Microsoft.Extensions.Primitives.StringValues>(form.Count, StringComparer.OrdinalIgnoreCase);
+        var totalRemoved = 0;
+        var hasChanges = false;
+
+        foreach (var item in form)
+        {
+            var values = item.Value;
+            String[]? sanitizedValues = null;
+
+            for (var index = 0; index < values.Count; index++)
+            {
+                var currentValue = values[index] ?? String.Empty;
+                var sanitizedValue = SanitizeFormData(currentValue, out var removedCount);
+                if (removedCount <= 0)
+                    continue;
+
+                sanitizedValues ??= CopyStringValues(values);
+                sanitizedValues[index] = sanitizedValue;
+                totalRemoved += removedCount;
+                hasChanges = true;
+            }
+
+            sanitizedFields[item.Key] = sanitizedValues == null
+                ? values
+                : new Microsoft.Extensions.Primitives.StringValues(sanitizedValues);
+        }
+
+        if (hasChanges)
+        {
+            request.Form = new FormCollection(sanitizedFields, form.Files);
+            XTrace.Log.Info($"[FormDataSanitizeMiddleware] 移除了 {totalRemoved} 个空字符");
+        }
+
+        return totalRemoved;
+    }
+
+    /// <summary>
+    /// 复制表单值并消除空引用
+    /// </summary>
+    private static String[] CopyStringValues(Microsoft.Extensions.Primitives.StringValues values)
+    {
+        var result = new String[values.Count];
+        for (var index = 0; index < values.Count; index++)
+        {
+            result[index] = values[index] ?? String.Empty;
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -215,28 +397,34 @@ public class FormDataSanitizeMiddleware
         try
         {
             if (request.Body.CanSeek)
-            {
                 request.Body.Position = 0;
-            }
         }
         catch (Exception ex)
         {
             XTrace.Log.Error($"[FormDataSanitizeMiddleware] 重置流位置失败: {ex.Message}");
         }
+
         await Task.CompletedTask.ConfigureAwait(false);
     }
 
     /// <summary>
     /// 快速检查是否包含空字符
-    /// 使用 ReadOnlySpan 提高性能
     /// </summary>
     private static Boolean ContainsNullCharacters(ReadOnlySpan<Char> input)
     {
         if (input.IsEmpty)
             return false;
 
-        // 使用 Span 进行高效查找
-        return input.Contains('\0') || input.ToString().Contains("%00", StringComparison.Ordinal);
+        if (input.Contains('\0'))
+            return true;
+
+        for (var index = 0; index < input.Length - 2; index++)
+        {
+            if (input[index] == '%' && input[index + 1] == '0' && input[index + 2] == '0')
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -294,27 +482,28 @@ public class FormDataSanitizeMiddleware
     /// </summary>
     private static Boolean IsNonTextContentType(ReadOnlySpan<Char> contentType)
     {
-        var lowerContentType = contentType.ToString().ToLowerInvariant();
-        
-        return !lowerContentType.StartsWith("text/") &&
-               !lowerContentType.StartsWith("application/x-www-form-urlencoded") &&
-               lowerContentType != "application/json";
+         return !contentType.StartsWith("text/".AsSpan(), StringComparison.OrdinalIgnoreCase) &&
+             !contentType.StartsWith(FormUrlEncodedType.AsSpan(), StringComparison.OrdinalIgnoreCase) &&
+             !contentType.Equals("application/json".AsSpan(), StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
     /// 净化表单数据，移除空字符
     /// 优化：使用StringBuilder避免多次字符串创建
     /// </summary>
-    private static String SanitizeFormData(String formData)
+    private static String SanitizeFormData(String formData, out Int32 totalRemoved)
     {
+        totalRemoved = 0;
+
         if (String.IsNullOrEmpty(formData))
+            return formData;
+
+        if (!ContainsNullCharacters(formData.AsSpan()))
             return formData;
 
         var hasChanges = false;
         var result = formData;
-        var totalRemoved = 0;
         
-        // 移除URL编码的空字符 %00
         if (result.Contains("%00"))
         {
             var originalLength = result.Length;
@@ -324,7 +513,6 @@ public class FormDataSanitizeMiddleware
             hasChanges = true;
         }
         
-        // 移除已解码的空字符 \0
         if (result.Contains('\0'))
         {
             var originalLength = result.Length;
@@ -333,12 +521,7 @@ public class FormDataSanitizeMiddleware
             hasChanges = true;
         }
 
-        if (hasChanges && totalRemoved > 0)
-        {
-            XTrace.Log.Info($"[FormDataSanitizeMiddleware] 移除了 {totalRemoved} 个空字符");
-        }
-
-        return result;
+        return hasChanges ? result : formData;
     }
 }
 
