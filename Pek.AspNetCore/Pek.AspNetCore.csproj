@@ -47,11 +47,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.202">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.301">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pek.Common" Version="4.22.2026.416-beta1017" />
+    <PackageReference Include="Pek.Common" Version="4.22.2026.715-beta0656" />
   </ItemGroup>
 
   <ItemGroup>
@@ -60,7 +60,7 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson">
-      <Version>10.0.6</Version>
+      <Version>10.0.10</Version>
     </PackageReference>
   </ItemGroup>
 
